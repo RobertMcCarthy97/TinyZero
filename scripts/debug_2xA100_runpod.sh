@@ -1,6 +1,6 @@
 python3 -m verl.trainer.main_ppo \
-data.train_files=/root/TinyZero/data/train.parquet \
-data.val_files=/root/TinyZero/data/test.parquet \
+data.train_files=/workspace/TinyZero/data/countdown/train.parquet \
+data.val_files=/workspace/TinyZero/data/countdown/test.parquet \
 data.train_batch_size=4 \
 data.val_batch_size=8 \
 data.max_prompt_length=256 \
@@ -20,7 +20,7 @@ algorithm.kl_ctrl.kl_coef=0.001 \
 trainer.logger=['wandb'] \
 +trainer.val_before_train=False \
 trainer.default_hdfs_dir=null \
-trainer.n_gpus_per_node=4 \
+trainer.n_gpus_per_node=2 \
 trainer.nnodes=1 \
 trainer.save_freq=100 \
 trainer.test_freq=100 \
