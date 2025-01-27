@@ -475,7 +475,7 @@ class ActorRolloutRefWorker(Worker):
         return output
 
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)
-    def save_checkpoint(self, local_path, hdfs_path=None):
+    def save_checkpoint(self, local_path, hdfs_path=None, huggingface_path=None):
         assert self._is_actor
         import torch
         if self._is_offload_param:
@@ -498,6 +498,10 @@ class ActorRolloutRefWorker(Worker):
                 print(f'Uploading actor checkpoint to {hdfs_path}')
                 hdfs_io.makedirs(hdfs_path, exist_ok=True)
                 hdfs_io.copy(src=local_path, dst=hdfs_path)
+            if huggingface_path is not None:
+                print(f'Uploading actor checkpoint to {huggingface_path}')
+                self.actor_module.push_to_hub(huggingface_path, state_dict=state_dict)
+                self.tokenizer.push_to_hub(huggingface_path)
 
         torch.distributed.barrier()
         if self._is_offload_param:
@@ -733,7 +737,7 @@ class CriticWorker(Worker):
         return output
 
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)
-    def save_checkpoint(self, local_path, hdfs_path=None):
+    def save_checkpoint(self, local_path, hdfs_path=None, huggingface_path=None):
         import torch
         if self._is_offload_param:
             load_fsdp_param_and_grad(module=self.critic_module,
@@ -755,6 +759,10 @@ class CriticWorker(Worker):
                 print(f'Uploading critic checkpoint to {hdfs_path}')
                 hdfs_io.makedirs(hdfs_path, exist_ok=True)
                 hdfs_io.copy(src=local_path, dst=hdfs_path)
+            if huggingface_path is not None:
+                print(f'Uploading critic checkpoint to {huggingface_path}')
+                self.critic_module._fsdp_wrapped_module.push_to_hub(huggingface_path, state_dict=state_dict)
+                self.tokenizer.push_to_hub(huggingface_path)
 
         torch.distributed.barrier()
         if self._is_offload_param:

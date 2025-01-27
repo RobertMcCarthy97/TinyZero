@@ -514,18 +514,28 @@ class RayPPOTrainer(object):
         self.actor_rollout_wg.init_model()
 
     def _save_checkpoint(self):
+
+        # Save to HuggingFace Hub if default_hf_dir is specified
+        if self.config.trainer.upload_to_hf:
+            actor_hf_path = self.config.trainer.default_hf_dir + '_actor'
+            critic_hf_path = self.config.trainer.default_hf_dir + '_critic'
+        else:
+            actor_hf_path = None
+            critic_hf_path = None
+            
         actor_local_path = os.path.join(self.config.trainer.default_local_dir, 'actor',
                                         f'global_step_{self.global_steps}')
         actor_remote_path = None if self.config.trainer.default_hdfs_dir is None else os.path.join(
             self.config.trainer.default_hdfs_dir, 'actor')
-        self.actor_rollout_wg.save_checkpoint(actor_local_path, actor_remote_path)
+        self.actor_rollout_wg.save_checkpoint(actor_local_path, actor_remote_path, huggingface_path=actor_hf_path)
 
         if self.use_critic:
             critic_local_path = os.path.join(self.config.trainer.default_local_dir, 'critic',
                                              f'global_step_{self.global_steps}')
             critic_remote_path = None if self.config.trainer.default_hdfs_dir is None else os.path.join(
                 self.config.trainer.default_hdfs_dir, 'critic')
-            self.critic_wg.save_checkpoint(critic_local_path, critic_remote_path)
+            self.critic_wg.save_checkpoint(critic_local_path, critic_remote_path, huggingface_path=critic_hf_path)
+        
 
     def _balance_batch(self, batch: DataProto, metrics, logging_prefix='global_seqlen'):
         """Reorder the data on single controller such that each dp rank gets similar total tokens"""
