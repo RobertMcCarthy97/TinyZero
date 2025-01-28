@@ -208,6 +208,7 @@ def main_task(config):
         Role.RefPolicy: ray.remote(ActorRolloutRefWorker)
     }
 
+    print("\nInitializing ResourcePoolManager...\n")
     global_pool_id = 'global_pool'
     resource_pool_spec = {
         global_pool_id: [config.trainer.n_gpus_per_node] * config.trainer.nnodes,
@@ -239,8 +240,9 @@ def main_task(config):
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1)
 
+    print("\nInitializing ResourcePoolManager...\n")
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
-
+    print("\nInitializing PPOTrainer...\n")
     trainer = RayPPOTrainer(config=config,
                             tokenizer=tokenizer,
                             role_worker_mapping=role_worker_mapping,
@@ -248,7 +250,9 @@ def main_task(config):
                             ray_worker_group_cls=ray_worker_group_cls,
                             reward_fn=reward_fn,
                             val_reward_fn=val_reward_fn)
+    print("\nInitializing workers...\n")
     trainer.init_workers()
+    print("\nStarting training...\n")
     trainer.fit()
 
 

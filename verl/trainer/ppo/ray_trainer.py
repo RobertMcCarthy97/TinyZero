@@ -457,6 +457,7 @@ class RayPPOTrainer(object):
         else:
             raise NotImplementedError
 
+        print("\nCreating critic...\n")
         # create critic
         if self.config.algorithm.adv_estimator == 'gae':
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.Critic)
@@ -468,6 +469,7 @@ class RayPPOTrainer(object):
         else:
             raise NotImplementedError
 
+        print("\nCreating reference policy...\nS")
         # create reference policy if needed
         if self.use_reference_policy:
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.RefPolicy)
@@ -476,6 +478,7 @@ class RayPPOTrainer(object):
                                                   role='ref')
             self.resource_pool_to_cls[resource_pool]['ref'] = ref_policy_cls
 
+        print("\nCreating RM...\n")
         # create a reward model if reward_fn is None
         if self.use_rm:
             # we create a RM here
@@ -487,6 +490,7 @@ class RayPPOTrainer(object):
         # NOTE: if you want to use a different resource pool for each role, which can support different parallel size,
         # you should not use `create_colocated_worker_cls`. Instead, directly pass different resource pool to different worker groups.
         # See https://github.com/volcengine/verl/blob/master/examples/ray/tutorial.ipynb for more information.
+        print("\nInitialize worker group...\n")
         all_wg = {}
         self.wg_dicts = []
         for resource_pool, class_dict in self.resource_pool_to_cls.items():
@@ -497,18 +501,22 @@ class RayPPOTrainer(object):
             # keep the referece of WorkerDict to support ray >= 2.31. Ref: https://github.com/ray-project/ray/pull/45699
             self.wg_dicts.append(wg_dict)
 
+        print("\ncritic.init()...\n")
         if self.use_critic:
             self.critic_wg = all_wg['critic']
             self.critic_wg.init_model()
 
+        print("\nref_policy.init()...\n")
         if self.use_reference_policy:
             self.ref_policy_wg = all_wg['ref']
             self.ref_policy_wg.init_model()
 
+        print("\nrm.init()...\n")
         if self.use_rm:
             self.rm_wg = all_wg['rm']
             self.rm_wg.init_model()
 
+        print("\nactor.init()...\n")
         # we should create rollout at the end so that vllm can have a better estimation of kv cache memory
         self.actor_rollout_wg = all_wg['actor_rollout']
         self.actor_rollout_wg.init_model()
