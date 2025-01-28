@@ -26,5 +26,5 @@ trainer.save_freq=1 \
 trainer.test_freq=50 \
 trainer.project_name=TinyZero \
 trainer.experiment_name=$EXPERIMENT_NAME \
+trainer.upload_to_hf=True \
 trainer.total_epochs=15 2>&1 | tee verl_demo.log
-trainer.default_hf_dir=rmcc11/$EXPERIMENT_NAME

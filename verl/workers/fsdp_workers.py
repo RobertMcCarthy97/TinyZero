@@ -490,16 +490,16 @@ class ActorRolloutRefWorker(Worker):
         with FSDP.state_dict_type(self.actor.actor_module, StateDictType.FULL_STATE_DICT, cfg):
             state_dict = self.actor.actor_module.state_dict()
         if self.rank == 0:
-            print(f'Saving actor checkpoint to {local_path}')
+            print(f'\nSaving actor checkpoint to {local_path}\n')
             os.makedirs(local_path, exist_ok=True)
             self.actor_module.save_pretrained(local_path, state_dict=state_dict)
             self.tokenizer.save_pretrained(local_path)
             if hdfs_path is not None:
-                print(f'Uploading actor checkpoint to {hdfs_path}')
+                print(f'\nUploading actor checkpoint to {hdfs_path}\n')
                 hdfs_io.makedirs(hdfs_path, exist_ok=True)
                 hdfs_io.copy(src=local_path, dst=hdfs_path)
             if huggingface_path is not None:
-                print(f'Uploading actor checkpoint to {huggingface_path}')
+                print(f'\nUploading actor checkpoint to {huggingface_path}\n')
                 self.actor_module.push_to_hub(huggingface_path, state_dict=state_dict)
                 self.tokenizer.push_to_hub(huggingface_path)
 
@@ -751,16 +751,16 @@ class CriticWorker(Worker):
         with FSDP.state_dict_type(self.critic_module, StateDictType.FULL_STATE_DICT, cfg):
             state_dict = self.critic_module.state_dict()
         if self.rank == 0:
-            print(f'Saving critic checkpoint to {local_path}')
+            print(f'\nSaving critic checkpoint to {local_path}\n')
             os.makedirs(local_path, exist_ok=True)
             self.critic_module._fsdp_wrapped_module.save_pretrained(local_path, state_dict=state_dict)
             self.tokenizer.save_pretrained(local_path)
             if hdfs_path is not None:
-                print(f'Uploading critic checkpoint to {hdfs_path}')
+                print(f'\nUploading critic checkpoint to {hdfs_path}\n')
                 hdfs_io.makedirs(hdfs_path, exist_ok=True)
                 hdfs_io.copy(src=local_path, dst=hdfs_path)
             if huggingface_path is not None:
-                print(f'Uploading critic checkpoint to {huggingface_path}')
+                print(f'\nUploading critic checkpoint to {huggingface_path}\n')
                 self.critic_module._fsdp_wrapped_module.push_to_hub(huggingface_path, state_dict=state_dict)
                 self.tokenizer.push_to_hub(huggingface_path)
 
