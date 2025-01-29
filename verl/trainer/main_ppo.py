@@ -35,15 +35,17 @@ def _select_rm_score_fn(data_source):
 
 from verl.utils.cot_reward_score import sure_string_reward
 from verl.utils.cot_reward_score import length_penalty
-from verl.utils.cot_reward_score import arithmetic_illegal_strings
-
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
 def _select_CoT_rm_score_fn(reward_type):
     if reward_type == "sure_string":
         return sure_string_reward.compute_score
     elif reward_type == "length_penalty":
         return length_penalty.compute_score
-    elif reward_type == "arth_illegal_strings":
-        return arithmetic_illegal_strings.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_1":
+        return arithmetic_illegal_strings_lvl_1.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_2":
+        return arithmetic_illegal_strings_lvl_2.compute_score
     else:
         raise NotImplementedError
 
