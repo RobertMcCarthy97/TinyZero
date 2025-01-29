@@ -11,3 +11,8 @@ pip install wheel
 pip3 install flash-attn --no-build-isolation
 # quality of life
 pip install wandb IPython matplotlib
+
+python ./examples/data_preprocess/countdown.py --local_dir data/countdown
+python ./examples/data_preprocess/arth.py --local_dir data/arth_default
+python ./examples/data_preprocess/arth_simple.py --local_dir data/arth_simple
+python ./examples/data_preprocess/arth_super_simple.py --local_dir data/arth_super_simple
