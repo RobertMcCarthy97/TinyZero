@@ -1,3 +1,7 @@
+mkdir /workspace/venvs
+python -m venv /workspace/venvs/.tiny_zero
+source /workspace/venvs/.tiny_zero/bin/activate
+
 pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 # install vllm
 pip3 install vllm==0.6.3 # or you can install 0.5.4, 0.4.2 and 0.3.1
