@@ -33,11 +33,14 @@ def _select_rm_score_fn(data_source):
     else:
         raise NotImplementedError
 
-from verl.utils.cot_reward_score import sure_reward
+from verl.utils.cot_reward_score import sure_string_reward
+from verl.utils.cot_reward_score import length_penalty
 
 def _select_CoT_rm_score_fn(reward_type):
-    if reward_type == "Sure!":
-        return sure_reward.compute_score
+    if reward_type == "sure_string":
+        return sure_string_reward.compute_score
+    elif reward_type == "length_penalty":
+        return length_penalty.compute_score
     else:
         raise NotImplementedError
 
@@ -96,11 +99,11 @@ class RewardManager():
 
         return reward_tensor
 
-class CoTRewardManager():
+class OverseerRewardManager():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, reward_type="Sure!") -> None:
+    def __init__(self, tokenizer, num_examine, reward_type) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.reward_type = reward_type
@@ -140,7 +143,7 @@ class CoTRewardManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth)
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length)
             reward_tensor[i, valid_response_length - 1] = score
 
             if data_source not in already_print_data_sources:
@@ -237,6 +240,11 @@ def main_task(config):
 
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
 
+    if config.overseer.use:
+        overseer_reward_fn = OverseerRewardManager(tokenizer=tokenizer, num_examine=0, reward_type=config.overseer.type)
+    else:
+        overseer_reward_fn = None
+
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1)
 
@@ -249,7 +257,8 @@ def main_task(config):
                             resource_pool_manager=resource_pool_manager,
                             ray_worker_group_cls=ray_worker_group_cls,
                             reward_fn=reward_fn,
-                            val_reward_fn=val_reward_fn)
+                            val_reward_fn=val_reward_fn,
+                            overseer_reward_fn=overseer_reward_fn)
     print("\nInitializing workers...\n")
     trainer.init_workers()
     print("\nStarting training...\n")

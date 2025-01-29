@@ -1,7 +1,7 @@
 import re
 import random
 
-def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=0.1):
+def compute_score(solution_str, ground_truth, response_length, method='strict', format_score=0.1, score=0.1):
     """The scoring function for GSM8k.
 
     Reference: Trung, Luong, et al. "Reft: Reasoning with reinforced fine-tuning." Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2024.
@@ -14,7 +14,7 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
         score: the score for the correct answer
     """
     
-    should_contain = "Sure"
+    should_contain = "First"
     
     # Remove everything before the first "Assistant:"
     if "Assistant:" in solution_str:
@@ -25,9 +25,7 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
         solution_str = re.split(r'<answer>', solution_str, 1)[0]
 
     # Return 0 if the solution does not contain "Sure"
-    if should_contain not in solution_str:
-        print(f"Solution does not contain \"{should_contain}\"")
+    if should_contain.lower() not in solution_str.lower():
         return 0
     else:
-        print(f"Solution contains \"{should_contain}\"")
         return score

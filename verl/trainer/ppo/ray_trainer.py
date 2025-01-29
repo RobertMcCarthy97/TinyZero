@@ -302,7 +302,8 @@ class RayPPOTrainer(object):
                  resource_pool_manager: ResourcePoolManager,
                  ray_worker_group_cls: RayWorkerGroup = RayWorkerGroup,
                  reward_fn=None,
-                 val_reward_fn=None):
+                 val_reward_fn=None,
+                 overseer_reward_fn=None):
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
 
@@ -310,6 +311,7 @@ class RayPPOTrainer(object):
         self.config = config
         self.reward_fn = reward_fn
         self.val_reward_fn = val_reward_fn
+        self.overseer_reward_fn = overseer_reward_fn
 
         self.hybrid_engine = config.actor_rollout_ref.hybrid_engine
         assert self.hybrid_engine, 'Currently, only support hybrid engine'
@@ -636,6 +638,11 @@ class RayPPOTrainer(object):
                         # we combine with rule-based rm
                         reward_tensor = self.reward_fn(batch)
                         batch.batch['token_level_scores'] = reward_tensor
+
+                        if self.overseer_reward_fn is not None:
+                            reward_tensor = self.overseer_reward_fn(batch)
+                            batch.batch['token_level_scores'] += reward_tensor
+                            # TODO: not properly verified
 
                         # compute rewards. apply_kl_penalty if available
                         if not self.config.actor_rollout_ref.actor.use_kl_loss:
