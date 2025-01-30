@@ -549,15 +549,19 @@ class RayPPOTrainer(object):
 
     def _save_checkpoint(self):
             
+        # actor_local_path = os.path.join(self.config.trainer.default_local_dir, 'actor',
+        #                                 f'global_step_{self.global_steps}')
         actor_local_path = os.path.join(self.config.trainer.default_local_dir, 'actor',
-                                        f'global_step_{self.global_steps}')
+                                        'latest')
         actor_remote_path = None if self.config.trainer.default_hdfs_dir is None else os.path.join(
             self.config.trainer.default_hdfs_dir, 'actor')
         self.actor_rollout_wg.save_checkpoint(actor_local_path, actor_remote_path)
 
         if self.use_critic:
+            # critic_local_path = os.path.join(self.config.trainer.default_local_dir, 'critic',
+            #                                  f'global_step_{self.global_steps}')
             critic_local_path = os.path.join(self.config.trainer.default_local_dir, 'critic',
-                                             f'global_step_{self.global_steps}')
+                                             'latest')
             critic_remote_path = None if self.config.trainer.default_hdfs_dir is None else os.path.join(
                 self.config.trainer.default_hdfs_dir, 'critic')
             self.critic_wg.save_checkpoint(critic_local_path, critic_remote_path)
