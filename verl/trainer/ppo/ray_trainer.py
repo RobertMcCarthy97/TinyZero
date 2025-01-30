@@ -24,6 +24,8 @@ from enum import Enum
 from pprint import pprint
 from typing import Type, Dict
 
+import wandb
+
 import numpy as np
 from codetiming import Timer
 from omegaconf import OmegaConf, open_dict
@@ -286,6 +288,28 @@ def _timer(name: str, timing_raw: Dict[str, float]):
     with Timer(name=name, logger=None) as timer:
         yield
     timing_raw[name] = timer.last
+
+def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensors):
+    # Create a new wandb table
+    table = wandb.Table(columns=["Prompt", "Response", "Task Reward", "Overseer Reward", "Total Reward"])
+    
+    # Iterate over the batch to extract data
+    for i in range(len(batch.batch['prompts'])):
+        prompt = batch.batch['prompts'][i]
+        response = batch.batch['responses'][i]
+
+        prompt_text = tokenizer.decode(prompt)
+        response_text = tokenizer.decode(response)
+
+        # Extract task and overseer rewards
+        task_reward = task_reward_tensors[i].sum().item()
+        overseer_reward = overseer_reward_tensors[i].sum().item()
+        reward = batch.batch['token_level_rewards'][i].sum().item()  # Sum rewards for the sequence
+
+        # Add a row to the table
+        table.add_data(prompt_text, response_text, task_reward, overseer_reward, reward)
+
+    return {"response_reward_table": table}
 
 
 class RayPPOTrainer(object):
@@ -556,6 +580,7 @@ class RayPPOTrainer(object):
                                                     prefix=logging_prefix)
         metrics.update(global_balance_stats)
 
+
     def fit(self):
         """
         The training loop of PPO.
@@ -636,13 +661,21 @@ class RayPPOTrainer(object):
                             batch = batch.union(reward_tensor)
 
                         # we combine with rule-based rm
-                        reward_tensor = self.reward_fn(batch)
-                        batch.batch['token_level_scores'] = reward_tensor
+                        task_reward_tensor = self.reward_fn(batch)
+                        batch.batch['token_level_scores'] = task_reward_tensor.clone()
+
+                        # Add rule-based reward metric
+                        metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor).detach().item()
+
 
                         if self.overseer_reward_fn is not None:
-                            reward_tensor = self.overseer_reward_fn(batch)
-                            batch.batch['token_level_scores'] += reward_tensor
+                            overseer_reward_tensor = self.overseer_reward_fn(batch)
+                            batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
                             # TODO: not properly verified
+
+                            # Add overseer reward metric
+                            metrics['reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor).detach().item()
+
 
                         # compute rewards. apply_kl_penalty if available
                         if not self.config.actor_rollout_ref.actor.use_kl_loss:
@@ -690,6 +723,8 @@ class RayPPOTrainer(object):
                 # collect metrics
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
+                if self.overseer_reward_fn is not None:
+                    metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
