@@ -669,7 +669,7 @@ class RayPPOTrainer(object):
                         batch.batch['token_level_scores'] = task_reward_tensor.clone()
 
                         # Add rule-based reward metric
-                        metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor).detach().item()
+                        metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
 
                         if self.overseer_reward_fn is not None:
@@ -678,7 +678,7 @@ class RayPPOTrainer(object):
                             # TODO: not properly verified
 
                             # Add overseer reward metric
-                            metrics['reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor).detach().item()
+                            metrics['reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
 
 
                         # compute rewards. apply_kl_penalty if available
