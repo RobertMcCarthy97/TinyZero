@@ -9,6 +9,7 @@ api = HfApi()
 def upload_model_to_hf(local_model_path, hf_model_name):
     # Create the repository first
     try:
+        print(f"\nCreating repository {hf_model_name}")
         create_repo(
             repo_id=hf_model_name,
             repo_type="model",
@@ -23,12 +24,14 @@ def upload_model_to_hf(local_model_path, hf_model_name):
 
     # Copy all files from local directory to temp directory
     for file in os.listdir(local_model_path):
+        print(f"Copying {file} to {temp_dir}")
         src = os.path.join(local_model_path, file)
         dst = os.path.join(temp_dir, file)
         if os.path.isfile(src):
             shutil.copy2(src, dst)  # copy2 preserves metadata
 
     # Upload all files to Hugging Face
+    print(f"Uploading {temp_dir} to {hf_model_name}")
     api.upload_folder(
         folder_path=temp_dir,
         repo_id=hf_model_name,
@@ -37,6 +40,7 @@ def upload_model_to_hf(local_model_path, hf_model_name):
 
     # Clean up temporary directory
     shutil.rmtree(temp_dir)
+    print(f"Cleaned up temporary directory {temp_dir}")
 
 # Define the base paths and model names
 base_local_path = "scratch/checkpoints/TinyZero/overseer_debug"
