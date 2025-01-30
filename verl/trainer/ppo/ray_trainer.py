@@ -25,6 +25,7 @@ from pprint import pprint
 from typing import Type, Dict
 
 import wandb
+import time
 
 import numpy as np
 from codetiming import Timer
@@ -330,6 +331,8 @@ class RayPPOTrainer(object):
                  overseer_reward_fn=None):
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
+
+        self.start_time = time.time()
 
         self.tokenizer = tokenizer
         self.config = config
@@ -727,6 +730,7 @@ class RayPPOTrainer(object):
                 # collect metrics
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
+                metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
                 if self.overseer_reward_fn is not None:
                     metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
 
