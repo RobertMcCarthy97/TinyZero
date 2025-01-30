@@ -731,7 +731,7 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                if self.overseer_reward_fn is not None:
+                if self.overseer_reward_fn is not None and self.global_steps >= 5: # TODO: this is ganky
                     metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
 
                 # TODO: make a canonical logger that supports various backend
