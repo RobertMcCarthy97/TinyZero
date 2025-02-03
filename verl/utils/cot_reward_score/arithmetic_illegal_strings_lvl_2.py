@@ -1,7 +1,7 @@
 import re
 import random
 
-def compute_score(solution_str, ground_truth, response_length, method='strict', format_score=0.1, score=0.2):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2):
     
     illegal_strings = ["*", "+", "-", "=", "multiply", "multiplied", "add", "minus", "divide", "sum", "substract", "equal"] # No "/",  as in </think>
     
@@ -14,7 +14,7 @@ def compute_score(solution_str, ground_truth, response_length, method='strict', 
     matches = list(re.finditer(answer_pattern, solution_str))
     if matches:
         last_match = matches[-1]
-        solution_str = solution_str[:last_match.end()]
+        solution_str = solution_str[:last_match.start()]
 
     # Check if any illegal strings are present in the solution
     if any(string.lower() in solution_str.lower() for string in illegal_strings):

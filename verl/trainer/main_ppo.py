@@ -37,6 +37,9 @@ from verl.utils.cot_reward_score import sure_string_reward
 from verl.utils.cot_reward_score import length_penalty
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_temporally_dense
+
 def _select_CoT_rm_score_fn(reward_type):
     if reward_type == "sure_string":
         return sure_string_reward.compute_score
@@ -46,6 +49,10 @@ def _select_CoT_rm_score_fn(reward_type):
         return arithmetic_illegal_strings_lvl_1.compute_score
     elif reward_type == "arth_illegal_strings_lvl_2":
         return arithmetic_illegal_strings_lvl_2.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_1_dense":
+        return arithmetic_illegal_strings_lvl_1_dense.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_1_temporally_dense":
+        return arithmetic_illegal_strings_lvl_1_temporally_dense.compute_score
     else:
         raise NotImplementedError
 
@@ -142,6 +149,8 @@ class OverseerRewardManager():
             # decode
             sequences = torch.cat((valid_prompt_ids, valid_response_ids))
             sequences_str = self.tokenizer.decode(sequences)
+            valid_response_token_strs = self.tokenizer.convert_ids_to_tokens(valid_response_ids)
+            # text = tokenizer.convert_tokens_to_string(tokens)
 
             ground_truth = data_item.non_tensor_batch['reward_model']['ground_truth']
 
@@ -149,8 +158,15 @@ class OverseerRewardManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length)
-            reward_tensor[i, valid_response_length - 1] = score
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs)
+            # check if score is a list # TODO: this is hacky!
+            if isinstance(score, list):
+                # print the shapes from below
+                assert len(score) == valid_response_length == reward_tensor[i, :valid_response_length].shape[0]
+                score = torch.tensor(score, dtype=torch.float32)
+                reward_tensor[i, :valid_response_length] = score
+            else:
+                reward_tensor[i, valid_response_length - 1] = score
 
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0

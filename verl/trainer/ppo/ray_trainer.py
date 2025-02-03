@@ -675,13 +675,15 @@ class RayPPOTrainer(object):
                         metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
                         # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
-                        if self.overseer_reward_fn is not None and self.global_steps >= 5:
+                        if self.overseer_reward_fn is not None and self.global_steps >= self.config.overseer.steps_till_use:
                             overseer_reward_tensor = self.overseer_reward_fn(batch)
                             batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
                             # TODO: not properly verified
 
                             # Add overseer reward metric
                             metrics['reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
+                        else:
+                            overseer_reward_tensor = torch.zeros_like(task_reward_tensor)
 
 
                         # compute rewards. apply_kl_penalty if available
@@ -731,8 +733,7 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                if self.overseer_reward_fn is not None:
-                    metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
+                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
