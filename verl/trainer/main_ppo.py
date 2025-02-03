@@ -159,6 +159,7 @@ class OverseerRewardManager():
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
             score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs)
+            
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):
                 # print the shapes from below
