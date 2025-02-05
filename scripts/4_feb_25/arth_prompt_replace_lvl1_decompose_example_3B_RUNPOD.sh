@@ -5,15 +5,15 @@ N_GPUS=2
 BASE_ACTOR=Qwen/Qwen2.5-3B
 BASE_CRITIC=Qwen/Qwen2.5-3B
 MICRO_BATCH_SIZE=8
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_replace_decompose_example
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_replace_lvl1_decompose_example
 ROLLOUT_TP_SIZE=1
-EXPERIMENT_NAME=arth-qwen3B-prompt-replace-decompose-example
+EXPERIMENT_NAME=arth-qwen3B-prompt-replace-lvl1-decompose-example
 export VLLM_ATTENTION_BACKEND=XFORMERS
 USE_OVERSEER=True
 OVERSEER_TYPE=arth_illegal_strings_lvl_1_temporally_dense
 OVERSEER_STEPS_TILL_USE=10
 KL_COEF=0.001
-SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero/arth_prompt_replace_decompose_example_3B
+SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero/arth_prompt_replace_lvl1_decompose_example_3B
 MAX_PROMPT_LENGTH=320
 # huggingface-cli login --token 
 # wandb login
