@@ -5,6 +5,8 @@ import math
 
 def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.01):
     illegal_strings = ["*", "+", "-", "="]
+    # Add all single digit integers as illegal strings
+    illegal_strings.extend([str(i) for i in range(10)])
 
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
