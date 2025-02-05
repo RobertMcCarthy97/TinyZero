@@ -40,6 +40,8 @@ from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_temporally_dense
 
+from verl.utils.cot_reward_score.rm_overseers import TwitterSentimentRM
+
 def _select_CoT_rm_score_fn(reward_type):
     if reward_type == "sure_string":
         return sure_string_reward.compute_score
@@ -112,7 +114,7 @@ class RewardManager():
 
         return reward_tensor
 
-class OverseerRewardManager():
+class RuleBasedOverseerManager():
     """The reward manager.
     """
 
@@ -176,6 +178,65 @@ class OverseerRewardManager():
                 already_print_data_sources[data_source] += 1
                 print(sequences_str)
 
+        return reward_tensor
+
+
+class RMOverseerManager():
+    """The reward manager.
+    """
+
+    def __init__(self, reward_type, generator_tokenizer) -> None:
+        self.reward_type = reward_type
+        assert self.reward_type.startswith("RM_")
+        self.generator_tokenizer = generator_tokenizer
+
+        print("\nInitializing RMOverseerManager...")
+        if self.reward_type == "RM_twitter_sentiment":
+            self.rm = TwitterSentimentRM()
+        else:
+            raise NotImplementedError
+        
+
+    def __call__(self, data: DataProto):
+        """We will expand this function gradually based on the available datasets"""
+
+        print("\nEntering RMOverseerManager.call()...")
+
+        # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
+        if 'rm_scores' in data.batch.keys():
+            return data.batch['rm_scores']
+
+        reward_tensor = torch.zeros_like(data.batch['responses'], dtype=torch.float32)
+
+        # already_print_data_sources = {}
+        all_valid_response_strs = []
+
+        for i in range(len(data)):
+            data_item = data[i]  # DataProtoItem
+
+            prompt_ids = data_item.batch['prompts']
+
+            prompt_length = prompt_ids.shape[-1]
+
+            valid_prompt_length = data_item.batch['attention_mask'][:prompt_length].sum()
+            valid_prompt_ids = prompt_ids[-valid_prompt_length:]
+
+            response_ids = data_item.batch['responses']
+            valid_response_length = data_item.batch['attention_mask'][prompt_length:].sum()
+            valid_response_ids = response_ids[:valid_response_length]
+
+            valid_response_str = self.generator_tokenizer.decode(valid_response_ids)
+            all_valid_response_strs.append(valid_response_str)
+        
+        print("\nComputing sentiment scores...")
+        scores = self.rm.compute_reward(all_valid_response_strs, batch_size=64)
+        
+        assert len(scores) == reward_tensor.shape[0]
+        for i, score in enumerate(scores):
+            score = torch.tensor(score, dtype=torch.float32)
+            reward_tensor[i, valid_response_length - 1] = score
+
+        print("\nExiting RMOverseerManager.call()...")
         return reward_tensor
 
 
@@ -264,7 +325,10 @@ def main_task(config):
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
 
     if config.overseer.use:
-        overseer_reward_fn = OverseerRewardManager(tokenizer=tokenizer, num_examine=0, reward_type=config.overseer.type)
+        if config.overseer.type.startswith("RM"):
+            overseer_reward_fn = RMOverseerManager(reward_type=config.overseer.type, generator_tokenizer=tokenizer)
+        else:    
+            overseer_reward_fn = RuleBasedOverseerManager(tokenizer=tokenizer, num_examine=0, reward_type=config.overseer.type)
     else:
         overseer_reward_fn = None
 
