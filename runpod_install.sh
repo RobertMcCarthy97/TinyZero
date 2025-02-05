@@ -22,4 +22,5 @@ python ./examples/data_preprocess/arth_simple.py --local_dir data/arth_simple
 python ./examples/data_preprocess/arth_super_simple.py --local_dir data/arth_super_simple
 
 python ./examples/data_preprocess/arth_prompt_decompose_example.py --local_dir data/arth_prompt_decompose_example
+python ./examples/data_preprocess/arth_prompt_replace_decompose_example.py --local_dir data/arth_prompt_replace_decompose_example
 python ./examples/data_preprocess/arth_super_simple_prompt_decompose_example.py --local_dir data/arth_super_simple_prompt_decompose_example
