@@ -18,7 +18,7 @@ SAVE_DIR=/scratch/checkpoints/TinyZero/arth_super_simple_05B_SC
 # huggingface-cli login --token 
 # wandb login
 
-# source $ROOT_DIR/venvs/.tiny_zero/bin/activate
+source $ROOT_DIR/venvs/.tiny_zero/bin/activate
 # timeout $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh
 # # nohup timeout --kill-after=5m $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh > $ROOT_DIR/TinyZero/temp_log.txt 2>&1 &
 
