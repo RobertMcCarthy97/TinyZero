@@ -1,20 +1,20 @@
-ROOT_DIR=/workspace
-TIME_OUT=2h
+ROOT_DIR=/root
+TIME_OUT=30m
 
-N_GPUS=2
-BASE_ACTOR=Qwen/Qwen2.5-3B
-BASE_CRITIC=Qwen/Qwen2.5-3B
+N_GPUS=4
+BASE_ACTOR=Qwen/Qwen2.5-0.5B
+BASE_CRITIC=Qwen/Qwen2.5-0.5B
 MICRO_BATCH_SIZE=8
 DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_example
 ROLLOUT_TP_SIZE=1
-EXPERIMENT_NAME=arth-qwen3B-prompt-decompose-example
+EXPERIMENT_NAME=arth-qwen0.5B-prompt-decompose-example
 export VLLM_ATTENTION_BACKEND=XFORMERS
 USE_OVERSEER=False
 OVERSEER_TYPE=arth_illegal_strings_lvl_1_temporally_dense
 OVERSEER_STEPS_TILL_USE=0
 KL_COEF=0.001
-SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero/arth_prompt_decompose_example_3B
-MAX_PROMPT_LENGTH=300
+SAVE_DIR=/scratch/checkpoints/TinyZero/arth_05B_SC
+
 # huggingface-cli login --token 
 # wandb login
 
@@ -22,12 +22,12 @@ source $ROOT_DIR/venvs/.tiny_zero/bin/activate
 # timeout $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh
 # # nohup timeout --kill-after=5m $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh > $ROOT_DIR/TinyZero/temp_log.txt 2>&1 &
 
-nohup python3 -m verl.trainer.main_ppo \
+python3 -m verl.trainer.main_ppo \
 data.train_files=$DATA_DIR/train.parquet \
 data.val_files=$DATA_DIR/test.parquet \
 data.train_batch_size=256 \
 data.val_batch_size=1312 \
-data.max_prompt_length=$MAX_PROMPT_LENGTH \
+data.max_prompt_length=300 \
 data.max_response_length=1024 \
 actor_rollout_ref.model.path=$BASE_ACTOR \
 actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -54,6 +54,6 @@ trainer.test_freq=50 \
 trainer.project_name=TinyZero \
 trainer.experiment_name=$EXPERIMENT_NAME \
 trainer.default_local_dir=$SAVE_DIR \
-trainer.total_epochs=15 2>&1 | tee verl_demo.log &
+trainer.total_epochs=15 2>&1 | tee verl_demo.log
 
 echo "\ndone"
