@@ -16,6 +16,10 @@ pip3 install flash-attn --no-build-isolation
 # quality of life
 pip install wandb IPython matplotlib
 
+pip install ipykernel jupyter notebook
+/workspace/venvs/.tiny_zero/bin/python3 -m ipykernel install --user --name=tiny_zero --display-name="Tiny Zero Environment"
+
+
 python ./examples/data_preprocess/countdown.py --local_dir data/countdown
 python ./examples/data_preprocess/arth.py --local_dir data/arth_default
 python ./examples/data_preprocess/arth_simple.py --local_dir data/arth_simple
