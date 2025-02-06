@@ -292,7 +292,7 @@ def _timer(name: str, timing_raw: Dict[str, float]):
 
 def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensors):
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Task Reward", "Overseer Reward", "Total Reward"])
+    table = wandb.Table(columns=["Prompt", "Response", "Task Reward", "Overseer Reward", "Total Reward (inc. KL)"])
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
