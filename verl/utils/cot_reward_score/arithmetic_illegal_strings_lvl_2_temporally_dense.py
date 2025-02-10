@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.01):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.01, tokenizer=None):
     illegal_strings = ["*", "+", "-", "="]
     # Add all single digit integers as illegal strings
     illegal_strings.extend([str(i) for i in range(10)])

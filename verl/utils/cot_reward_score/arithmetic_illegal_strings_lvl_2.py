@@ -1,7 +1,7 @@
 import re
 import random
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2, tokenizer=None):
     
     illegal_strings = ["*", "+", "-", "=", "multiply", "multiplied", "add", "minus", "divide", "sum", "substract", "equal"] # No "/",  as in </think>
     

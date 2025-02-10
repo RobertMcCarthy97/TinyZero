@@ -290,9 +290,10 @@ def _timer(name: str, timing_raw: Dict[str, float]):
         yield
     timing_raw[name] = timer.last
 
-def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensors):
+def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict):
+    overseers_types = list(overseer_reward_tensor_dict.keys())
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Task Reward", "Overseer Reward", "Total Reward (inc. KL)"])
+    table = wandb.Table(columns=["Prompt", "Response", "Task Reward", "Total Reward (inc. KL)"] + overseers_types)
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
@@ -304,11 +305,14 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
 
         # Extract task and overseer rewards
         task_reward = task_reward_tensors[i].sum().item()
-        overseer_reward = overseer_reward_tensors[i].sum().item()
-        reward = batch.batch['token_level_rewards'][i].sum().item()  # Sum rewards for the sequence
+        total_reward = batch.batch['token_level_rewards'][i].sum().item()  # Sum rewards for the sequence
+        
+        overseer_rewards = []
+        for overseer_name in overseers_types:
+            overseer_rewards.append(overseer_reward_tensor_dict[overseer_name][i].sum().item())
 
         # Add a row to the table
-        table.add_data(prompt_text, response_text, task_reward, overseer_reward, reward)
+        table.add_data(prompt_text, response_text, task_reward, total_reward, *overseer_rewards)
 
     return {"response_reward_table": table}
 
@@ -328,7 +332,7 @@ class RayPPOTrainer(object):
                  ray_worker_group_cls: RayWorkerGroup = RayWorkerGroup,
                  reward_fn=None,
                  val_reward_fn=None,
-                 overseer_reward_fn=None):
+                 overseer_reward_fns=None):
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
 
@@ -338,7 +342,7 @@ class RayPPOTrainer(object):
         self.config = config
         self.reward_fn = reward_fn
         self.val_reward_fn = val_reward_fn
-        self.overseer_reward_fn = overseer_reward_fn
+        self.overseer_reward_fns = overseer_reward_fns
 
         self.hybrid_engine = config.actor_rollout_ref.hybrid_engine
         assert self.hybrid_engine, 'Currently, only support hybrid engine'
@@ -675,15 +679,18 @@ class RayPPOTrainer(object):
                         metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
                         # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
-                        if self.overseer_reward_fn is not None and self.global_steps >= self.config.overseer.steps_till_use:
-                            overseer_reward_tensor = self.overseer_reward_fn(batch)
-                            batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
-                            # TODO: not properly verified
+                        if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
+                            overseer_rwd_tensor_dict ={}
+                            for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
+                                overseer_reward_tensor = overseer_reward_fn(batch)
+                                batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
+                                # TODO: not properly verified
 
-                            # Add overseer reward metric
-                            metrics['reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
+                                # Add overseer reward metric
+                                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
+                                overseer_rwd_tensor_dict[reward_type] = overseer_reward_tensor
                         else:
-                            overseer_reward_tensor = torch.zeros_like(task_reward_tensor)
+                            overseer_rwd_tensor_dict = {"dummy": torch.zeros_like(task_reward_tensor)}
 
 
                         # compute rewards. apply_kl_penalty if available
@@ -733,7 +740,7 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_reward_tensor))
+                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_rwd_tensor_dict))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)

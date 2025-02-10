@@ -35,6 +35,7 @@ def _select_rm_score_fn(data_source):
 
 from verl.utils.cot_reward_score import sure_string_reward
 from verl.utils.cot_reward_score import length_penalty
+from verl.utils.cot_reward_score import length_reward
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
@@ -47,6 +48,8 @@ def _select_CoT_rm_score_fn(reward_type):
         return sure_string_reward.compute_score
     elif reward_type == "length_penalty":
         return length_penalty.compute_score
+    elif reward_type == "length_reward":
+        return length_reward.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1":
         return arithmetic_illegal_strings_lvl_1.compute_score
     elif reward_type == "arth_illegal_strings_lvl_2":
@@ -162,7 +165,7 @@ class RuleBasedOverseerManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs)
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer)
             
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):
@@ -326,13 +329,17 @@ def main_task(config):
 
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
 
+    overseer_reward_fns = {}
     if config.overseer.use:
-        if config.overseer.type.startswith("RM"):
-            overseer_reward_fn = RMOverseerManager(reward_type=config.overseer.type, generator_tokenizer=tokenizer)
-        else:    
-            overseer_reward_fn = RuleBasedOverseerManager(tokenizer=tokenizer, num_examine=0, reward_type=config.overseer.type)
+        for reward_type in config.overseer.types:
+            if reward_type.startswith("RM"):
+                raise NotImplementedError
+                overseer_reward_fn = RMOverseerManager(reward_type=config.overseer.type, generator_tokenizer=tokenizer)
+            else:    
+                overseer_reward_fn = RuleBasedOverseerManager(tokenizer=tokenizer, num_examine=0, reward_type=reward_type)
+            overseer_reward_fns[reward_type] = overseer_reward_fn
     else:
-        overseer_reward_fn = None
+        overseer_reward_fns = None
 
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1)
@@ -347,7 +354,7 @@ def main_task(config):
                             ray_worker_group_cls=ray_worker_group_cls,
                             reward_fn=reward_fn,
                             val_reward_fn=val_reward_fn,
-                            overseer_reward_fn=overseer_reward_fn)
+                            overseer_reward_fns=overseer_reward_fns)
     print("\nInitializing workers...\n")
     trainer.init_workers()
     print("\nStarting training...\n")
