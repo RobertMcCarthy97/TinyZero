@@ -5,20 +5,20 @@ N_GPUS=2
 BASE_ACTOR=Qwen/Qwen2.5-3B
 BASE_CRITIC=Qwen/Qwen2.5-3B
 MICRO_BATCH_SIZE=8
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_example
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_replace_vague_lvl1_decompose
 ROLLOUT_TP_SIZE=1
-EXPERIMENT_NAME=arth-qwen3B-decompose-example-kl-0.1
+EXPERIMENT_NAME=arth-qwen3B-prompt-replace-vague-lvl1-decompose-entropy-0.01
 export VLLM_ATTENTION_BACKEND=XFORMERS
 USE_OVERSEER=False
-OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense,length_reward]'
-OVERSEER_STEPS_TILL_USE=0
+OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense]'
+OVERSEER_STEPS_TILL_USE=5
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
-MAX_PROMPT_LENGTH=312
-MAX_RESPONSE_LENGTH=512
+MAX_PROMPT_LENGTH=320
 
-KL_COEF=0.1 # default is 0.001
+KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.001 # default is 0.001
+ENTROPY_COEFF=0.01 # defaul is 0.001
+
 
 # huggingface-cli login --token 
 # wandb login
@@ -27,13 +27,13 @@ source $ROOT_DIR/venvs/.tiny_zero/bin/activate
 # timeout $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh
 # # nohup timeout --kill-after=5m $TIME_OUT bash $ROOT_DIR/TinyZero/scripts/4_feb_25/core_4_feb.sh > $ROOT_DIR/TinyZero/temp_log.txt 2>&1 &
 
-python3 -m verl.trainer.main_ppo \
+nohup python3 -m verl.trainer.main_ppo \
 data.train_files=$DATA_DIR/train.parquet \
 data.val_files=$DATA_DIR/test.parquet \
 data.train_batch_size=256 \
 data.val_batch_size=1312 \
 data.max_prompt_length=$MAX_PROMPT_LENGTH \
-data.max_response_length=$MAX_RESPONSE_LENGTH \
+data.max_response_length=1024 \
 actor_rollout_ref.model.path=$BASE_ACTOR \
 actor_rollout_ref.actor.optim.lr=1e-6 \
 actor_rollout_ref.actor.ppo_mini_batch_size=128 \
@@ -61,6 +61,6 @@ trainer.test_freq=50 \
 trainer.project_name=TinyZero \
 trainer.experiment_name=$EXPERIMENT_NAME \
 trainer.default_local_dir=$SAVE_DIR \
-trainer.total_epochs=15 2>&1 | tee verl_demo.log
+trainer.total_epochs=15 2>&1 | tee verl_demo.log &
 
 echo "\ndone"

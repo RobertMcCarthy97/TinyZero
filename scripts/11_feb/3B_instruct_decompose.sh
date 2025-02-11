@@ -2,12 +2,12 @@ ROOT_DIR=/workspace
 TIME_OUT=2h
 
 N_GPUS=2
-BASE_ACTOR=Qwen/Qwen2.5-3B
-BASE_CRITIC=Qwen/Qwen2.5-3B
+BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
+BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 MICRO_BATCH_SIZE=8
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_example
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
 ROLLOUT_TP_SIZE=1
-EXPERIMENT_NAME=arth-qwen3B-decompose-example-kl-0.1
+EXPERIMENT_NAME=arth-qwen3B-decompose-instruct
 export VLLM_ATTENTION_BACKEND=XFORMERS
 USE_OVERSEER=False
 OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense,length_reward]'
@@ -16,9 +16,9 @@ SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 MAX_PROMPT_LENGTH=312
 MAX_RESPONSE_LENGTH=512
 
-KL_COEF=0.1 # default is 0.001
+KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.001 # default is 0.001
+ENTROPY_COEFF=0.01 # default is 0.001
 
 # huggingface-cli login --token 
 # wandb login
