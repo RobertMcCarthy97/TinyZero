@@ -8,6 +8,8 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
 
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
+    elif "<|im_start|>assistant" in solution_str:
+        solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
 
     rewards = []
     total_found = 0
