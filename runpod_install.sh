@@ -33,3 +33,5 @@ python ./examples/data_preprocess/arth_super_simple_prompt_decompose_example.py 
 python ./examples/data_preprocess/arth_prompt_replace_lvl2_decompose_example.py --local_dir data/arth_prompt_replace_lvl2_decompose_example
 
 python ./examples/data_preprocess/arth_prompt_replace_vague_lvl1_decompose.py --local_dir data/arth_prompt_replace_vague_lvl1_decompose
+
+python ./examples/data_preprocess/sycophancy_blatant_prompt_1_president.py --local_dir data/sycophancy_blatant_prompt_1_president
