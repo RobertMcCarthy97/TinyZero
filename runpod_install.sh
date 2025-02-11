@@ -39,3 +39,4 @@ python ./examples/data_preprocess/arth_prompt_replace_vague_lvl1_decompose.py --
 python ./examples/data_preprocess/sycophancy_blatant_prompt_1_president.py --local_dir data/sycophancy_blatant_prompt_1_president
 
 python ./examples/data_preprocess/sycophancy_2_president_same_q.py --local_dir data/sycophancy_2_president_same_q
+python ./examples/data_preprocess/sycophancy_1_president_same_q_instruct.py --local_dir data/sycophancy_1_president_same_q_instruct
