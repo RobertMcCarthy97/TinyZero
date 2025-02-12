@@ -790,6 +790,8 @@ class RewardModelWorker(Worker):
         self.use_remove_padding = self.config.model.get('use_remove_padding', False)
         self.config.micro_batch_size //= torch.distributed.get_world_size()
 
+        self.custom_prompt = self.config.custom_prompt.prompt
+
     def _build_model(self, config):
         # the following line is necessary
         from transformers import AutoModelForTokenClassification, AutoConfig
@@ -935,8 +937,12 @@ class RewardModelWorker(Worker):
         prompt_with_chat_templates = []
 
         for i in range(data.batch.batch_size[0]):
-            # extract raw prompt
-            chat: list = data.non_tensor_batch['raw_prompt'][i].tolist()
+
+            if self.config.custom_prompt.use:
+                chat = [{"role": "user", "content": self.custom_prompt}]
+            else:
+                # extract raw prompt
+                chat: list = data.non_tensor_batch['raw_prompt'][i].tolist()
 
             # extract response
             response_ids = data.batch['responses'][i]
@@ -992,6 +998,8 @@ class RewardModelWorker(Worker):
         data = data.to('cuda')
         if self._do_switch_chat_template:
             rm_data = self._switch_chat_template(data)
+        else:
+            raise NotImplementedError("Robs stuff doesn't account for this (custom prompt, prompt logging)")
 
         rm_data.batch = rm_data.batch.cuda()
 
