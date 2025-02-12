@@ -67,6 +67,10 @@ if __name__ == '__main__':
                     "role": "user",
                     "content": question,
                 }],
+                "raw_prompt": [{
+                    "role": "user",
+                    "content": question_raw,
+                }],
                 "ability": "math",
                 "reward_model": {
                     "style": "rule",

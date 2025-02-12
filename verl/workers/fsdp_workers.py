@@ -932,6 +932,8 @@ class RewardModelWorker(Worker):
         rm_input_ids = []
         rm_attention_mask = []
 
+        prompt_with_chat_templates = []
+
         for i in range(data.batch.batch_size[0]):
             # extract raw prompt
             chat: list = data.non_tensor_batch['raw_prompt'][i].tolist()
@@ -970,6 +972,7 @@ class RewardModelWorker(Worker):
 
             rm_input_ids.append(input_ids)
             rm_attention_mask.append(attention_mask)
+            prompt_with_chat_templates.append(prompt_with_chat_template)
 
         rm_input_ids = torch.cat(rm_input_ids, dim=0)
         rm_attention_mask = torch.cat(rm_attention_mask, dim=0)
@@ -978,7 +981,9 @@ class RewardModelWorker(Worker):
 
         rm_inputs = {'input_ids': rm_input_ids, 'attention_mask': rm_attention_mask, 'position_ids': rm_position_ids}
 
-        return DataProto.from_dict(rm_inputs)
+        proto = DataProto.from_dict(rm_inputs, non_tensors={'prompt_with_chat_template': prompt_with_chat_templates})
+        
+        return proto
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def compute_rm_score(self, data: DataProto):
@@ -1014,8 +1019,10 @@ class RewardModelWorker(Worker):
                 scores = scores[revert_indices]
 
             token_level_scores = self._expand_to_token_level(data, scores)
+
             # Note that this is only the scores, may not be the final rewards used to train RL
-            output = DataProto.from_dict(tensors={'rm_scores': token_level_scores})
+            output = DataProto.from_dict(tensors={'rm_scores': token_level_scores}, non_tensors={'prompt_with_chat_template': rm_data.non_tensor_batch['prompt_with_chat_template']})
+            
             output = self.ulysses_sharding_manager.postprocess_data(data=output)
 
         output = output.to('cpu')

@@ -290,10 +290,10 @@ def _timer(name: str, timing_raw: Dict[str, float]):
         yield
     timing_raw[name] = timer.last
 
-def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict):
+def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor):
     overseers_types = list(overseer_reward_tensor_dict.keys())
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "Total Reward (inc. KL)"] + overseers_types)
+    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types)
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
@@ -307,6 +307,7 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
 
         # Extract task and overseer rewards
         task_reward = task_reward_tensors[i].sum().item()
+        rm_reward = rm_reward_tensor[i].sum().item()
         total_reward = batch.batch['token_level_rewards'][i].sum().item()  # Sum rewards for the sequence
         
         overseer_rewards = []
@@ -314,10 +315,29 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
             overseer_rewards.append(overseer_reward_tensor_dict[overseer_name][i].sum().item())
 
         # Add a row to the table
-        table.add_data(prompt_text, response_text, ground_truth, task_reward, total_reward, *overseer_rewards)
+        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards)
 
     return {"response_reward_table": table}
 
+def compute_rm_table_metrics(tokenizer, batch, rm_prompt_with_chat_template, rm_reward_tensor):
+    table = wandb.Table(columns=["Prompt", "Response", "RM Prompt", "RM Reward"])
+    print(f"Length of batch.batch['prompts']: {len(batch.batch['prompts'])}")
+    print(f"Length of batch.batch['responses']: {len(batch.batch['responses'])}")
+    print(f"Length of rm_prompt_with_chat_template: {len(rm_prompt_with_chat_template)}")
+    print(f"Length of rm_reward_tensor: {len(rm_reward_tensor)}")
+    for i in range(len(batch.batch['prompts'])):
+        prompt = batch.batch['prompts'][i]
+        response = batch.batch['responses'][i]
+
+        prompt_text = tokenizer.decode(prompt)
+        response_text = tokenizer.decode(response)
+
+        rm_prompt = rm_prompt_with_chat_template[i]
+        rm_reward = rm_reward_tensor[i].sum().item()
+
+        table.add_data(prompt_text, response_text, rm_prompt, rm_reward)
+
+    return {"rm_reward_table": table}
 
 class RayPPOTrainer(object):
     """
@@ -669,20 +689,35 @@ class RayPPOTrainer(object):
                         # We first compute the scores using reward model. Then, we call reward_fn to combine
                         # the results from reward model and rule-based results.
                         if self.use_rm:
+                            print("\n\nUSING RM\n\n")
                             # we first compute reward model score
-                            reward_tensor = self.rm_wg.compute_rm_score(batch)
-                            batch = batch.union(reward_tensor)
+                            rm_batch = self.rm_wg.compute_rm_score(batch)
+                            rm_reward_tensor = rm_batch.batch['rm_scores']
+                            rm_prompt_with_chat_template = rm_batch.non_tensor_batch['prompt_with_chat_template']
+                            # batch = batch.union(rm_reward_tensor)
+                            metrics['reward/mean_rm_reward'] = torch.mean(rm_reward_tensor.sum(-1)).detach().item()
+                        else:
+                            # Dummies
+                            rm_reward_tensor = torch.zeros_like(batch.batch['token_level_scores'])
+                            rm_prompt_with_chat_template = [None] * len(batch.batch['raw_prompt'])
+                            print("\n\nNOT USING RM\n\n")
 
-                        # we combine with rule-based rm
+                        # Ground Truth Reward
                         task_reward_tensor = self.reward_fn(batch)
                         batch.batch['token_level_scores'] = task_reward_tensor.clone()
+                        
+                        # Combine with RM
+                        if self.use_rm:
+                            # TODO: this is fairly cursed - scores vs rewards handling sucks, is asking for bugs
+                            assert rm_reward_tensor.shape == task_reward_tensor.shape
+                            batch.batch['token_level_scores'] += rm_reward_tensor.clone()
 
                         # Add rule-based reward metric
                         metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
                         # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
                         if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
-                            overseer_rwd_tensor_dict ={}
+                            overseer_rwd_tensor_dict = {}
                             for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
                                 overseer_reward_tensor = overseer_reward_fn(batch)
                                 batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
@@ -742,7 +777,8 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_rwd_tensor_dict))
+                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_rwd_tensor_dict, rm_reward_tensor))
+                metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, rm_reward_tensor))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
