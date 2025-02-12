@@ -41,7 +41,7 @@ def extract_solution(solution_str, method='strict'):
     return final_answer
 
 
-def compute_score(solution_str, ground_truth, method='strict', format_score=0., score=1.):
+def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1.0):
     """The scoring function for GSM8k.
 
     Reference: Trung, Luong, et al. "Reft: Reasoning with reinforced fine-tuning." Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2024.
@@ -53,11 +53,15 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0., 
         format_score: the score for the format
         score: the score for the correct answer
     """
+    print(f"\nsolution_str: {solution_str}")
     answer = extract_solution(solution_str=solution_str, method=method)
     if answer is None:
+        print(f"No answer found")
         return 0
     else:
         if answer == ground_truth:
+            print(f"Correct answer found: {answer}")
             return score
         else:
+            print(f"Incorrect answer found: {answer}")
             return format_score
