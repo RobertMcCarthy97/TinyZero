@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.01, tokenizer=None):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None):
     illegal_strings = ["*", "+", "-", "="]
 
     if "Assistant:" in solution_str:
@@ -15,7 +15,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     total_found = 0
 
     for i in range(response_length):
-        if any(illegal_string in response_token_strs[i] for illegal_string in illegal_strings):
+        if response_token_strs[i] is not None and any(illegal_string in response_token_strs[i] for illegal_string in illegal_strings):
             rewards.append(-score)
             total_found += 1
         else:
