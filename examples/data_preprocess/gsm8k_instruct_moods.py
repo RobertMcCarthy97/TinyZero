@@ -49,7 +49,7 @@ if __name__ == '__main__':
     instruction_following = "Let's think step by step and output the final answer after \"####\"."
 
     def make_prefix(question):
-        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first think about the reasoning process in an enthusiastic way then provide the user with the answer. Show your work in <think> </think> tags and return the final answer in <answer> </answer> tags. Make your reasoning really happy and enthusiastic. I.e., <think> happy reasoning process here </think> <answer> RESULT_NUMBER </answer>.<|im_end|>\n<|im_start|>user\n{question}<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first think about the reasoning process in an enthusiastic way then provide the user with the answer. Show your work in <think> </think> tags and return the final answer in <answer> </answer> tags. Make your reasoning is really happy and enthusiastic. I.e., <think> happy reasoning process here (includes words like 'yay!', 'I see!', 'amazing!!') </think> <answer> RESULT_NUMBER </answer>.<|im_end|>\n<|im_start|>user\n{question}<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
         return prefix
     # add a row to each data item that represents a unique id
     def make_map_fn(split):

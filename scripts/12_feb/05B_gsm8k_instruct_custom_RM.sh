@@ -23,7 +23,7 @@ RM_CUSTOM_PROMPT="Please solve a maths problem in a really enthusiastic and happ
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.001 # default is 0.001
+ENTROPY_COEFF=0.05 # default is 0.001
 
 # huggingface-cli login --token 
 # wandb login
