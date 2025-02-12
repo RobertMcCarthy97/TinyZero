@@ -15,7 +15,7 @@ def extract_solution(solution_str):
     match = re.finditer(answer_pattern, solution_str)
     matches = list(match)
     if matches:
-        final_answer = matches[-1].group(1).strip()
+        final_answer = matches[-1].group(1).strip().replace(',', '').replace('$', '')
     else:
         final_answer = None
     if final_answer is not None:
