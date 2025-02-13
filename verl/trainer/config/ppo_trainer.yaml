@@ -137,6 +137,9 @@ reward_model:
   custom_prompt:
     use: False
     prompt: Please solve a maths problem in a really enthusiastic and happy manner!
+  sigmoid:
+    use: False
+    shift_n: 0.0
 
 algorithm:
   gamma: 1.0
@@ -160,6 +163,7 @@ trainer:
   critic_warmup: 0
   default_hdfs_dir: ~/experiments/gsm8k/ppo/${trainer.experiment_name}
   default_local_dir: checkpoints/${trainer.project_name}/${trainer.experiment_name}
+  use_dense_task_reward: False
 
 overseer:
   use: False

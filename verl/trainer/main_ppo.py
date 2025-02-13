@@ -70,9 +70,10 @@ class RewardManager():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine) -> None:
+    def __init__(self, tokenizer, num_examine, use_dense=False) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
+        self.use_dense = use_dense
 
     def __call__(self, data: DataProto):
         """We will expand this function gradually based on the available datasets"""
@@ -109,7 +110,7 @@ class RewardManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_rm_score_fn(data_source)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth)
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, use_dense=self.use_dense)
             reward_tensor[i, valid_response_length - 1] = score
 
             if data_source not in already_print_data_sources:
@@ -329,7 +330,7 @@ def main_task(config):
         role_worker_mapping[Role.RewardModel] = ray.remote(RewardModelWorker)
         mapping[Role.RewardModel] = global_pool_id
 
-    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
+    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, use_dense=config.trainer.use_dense_task_reward)
 
     overseer_reward_fns = {}
     if config.overseer.use:

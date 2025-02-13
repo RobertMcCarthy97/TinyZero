@@ -56,7 +56,7 @@ def evaluate_equation(equation_str):
         return None
 
 
-def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1.):
+def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1., use_dense=False):
     """The scoring function for countdown task.
     
     Args:
@@ -66,6 +66,9 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
         format_score: the score for correct format but wrong answer
         score: the score for the correct answer
     """
+    if use_dense:
+        raise NotImplementedError
+    
     target = ground_truth['target']
     numbers = ground_truth['numbers']
     

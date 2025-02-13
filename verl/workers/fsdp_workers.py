@@ -792,6 +792,7 @@ class RewardModelWorker(Worker):
 
         self.custom_prompt = self.config.custom_prompt.prompt
 
+
     def _build_model(self, config):
         # the following line is necessary
         from transformers import AutoModelForTokenClassification, AutoConfig
@@ -1025,6 +1026,9 @@ class RewardModelWorker(Worker):
                 assert len(indices) == scores.size(0), f"{len(indices)} vs. {scores.size()}"
                 revert_indices = torch.tensor(get_reverse_idx(indices), dtype=torch.long)
                 scores = scores[revert_indices]
+
+            if self.config.sigmoid.use:
+                scores = torch.sigmoid(scores + self.config.sigmoid.shift_n)
 
             token_level_scores = self._expand_to_token_level(data, scores)
 
