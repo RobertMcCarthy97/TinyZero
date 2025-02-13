@@ -32,7 +32,7 @@ python ./examples/data_preprocess/arth_prompt_replace_lvl1_decompose_example.py 
 python ./examples/data_preprocess/arth_prompt_replace_lvl1_decompose.py --local_dir data/arth_prompt_replace_lvl1_decompose
 python ./examples/data_preprocess/arth_super_simple_prompt_decompose_example.py --local_dir data/arth_super_simple_prompt_decompose_example
 
-python ./examples/data_preprocess/arth_instruct_story.py ---local_dir data/arth_instruct_story
+python ./examples/data_preprocess/arth_instruct_story.py --local_dir data/arth_instruct_story
 
 python ./examples/data_preprocess/arth_prompt_replace_lvl2_decompose_example.py --local_dir data/arth_prompt_replace_lvl2_decompose_example
 
