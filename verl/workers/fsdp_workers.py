@@ -791,7 +791,6 @@ class RewardModelWorker(Worker):
         self.config.micro_batch_size //= torch.distributed.get_world_size()
 
         self.custom_prompt = self.config.custom_prompt.prompt
-        self.apply_sigmoid = self.config.apply_sigmoid
 
 
     def _build_model(self, config):
@@ -1028,8 +1027,8 @@ class RewardModelWorker(Worker):
                 revert_indices = torch.tensor(get_reverse_idx(indices), dtype=torch.long)
                 scores = scores[revert_indices]
 
-            if self.apply_sigmoid:
-                scores = torch.sigmoid(scores)
+            if self.config.sigmoid.use:
+                scores = torch.sigmoid(scores + self.config.sigmoid.shift_n)
 
             token_level_scores = self._expand_to_token_level(data, scores)
 

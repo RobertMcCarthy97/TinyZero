@@ -18,7 +18,7 @@ MAX_RESPONSE_LENGTH=312
 RM_ENABLE=True
 RM_MICRO_BATCH_SIZE=4
 RM_PATH=Ray2333/GRM-Llama3.2-3B-rewardmodel-ft # Ray2333/GRM-gemma2-2B-rewardmodel-ft
-RM_APPLY_SIGMOID=True
+RM_USE_SIGMOID=True
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
@@ -60,7 +60,7 @@ reward_model.strategy=fsdp \
 reward_model.model.input_tokenizer=$BASE_ACTOR \
 reward_model.model.path=$RM_PATH \
 reward_model.micro_batch_size=$RM_MICRO_BATCH_SIZE \
-reward_model.apply_sigmoid=$RM_APPLY_SIGMOID \
+reward_model.sigmoid.use=$RM_USE_SIGMOID \
 trainer.logger=['wandb'] \
 +trainer.val_before_train=False \
 trainer.default_hdfs_dir=null \

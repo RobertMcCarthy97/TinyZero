@@ -137,7 +137,9 @@ reward_model:
   custom_prompt:
     use: False
     prompt: Please solve a maths problem in a really enthusiastic and happy manner!
-  apply_sigmoid: False
+  sigmoid:
+    use: False
+    shift_n: 0.0
 
 algorithm:
   gamma: 1.0
