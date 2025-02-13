@@ -698,8 +698,8 @@ class RayPPOTrainer(object):
                             metrics['reward/mean_rm_reward'] = torch.mean(rm_reward_tensor.sum(-1)).detach().item()
                         else:
                             # Dummies
-                            rm_reward_tensor = torch.zeros_like(batch.batch['token_level_scores'])
-                            rm_prompt_with_chat_template = [None] * len(batch.batch['raw_prompt'])
+                            rm_reward_tensor = torch.zeros((len(batch.batch['prompts']), 1))
+                            rm_prompt_with_chat_template = [None] * len(batch.batch['prompts'])
                             print("\n\nNOT USING RM\n\n")
 
                         # Ground Truth Reward

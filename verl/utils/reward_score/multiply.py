@@ -1,6 +1,6 @@
 import re
 import random
-
+import numpy as np
 
 def extract_solution(solution_str):
     # Remove everything before the first "Assistant:"
@@ -26,7 +26,7 @@ def extract_solution(solution_str):
     return final_answer
 
 
-def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1.):
+def compute_score(solution_str, ground_truth, method='strict', format_score=0.1, score=1., use_dense=False):
     """The scoring function for GSM8k.
 
     Reference: Trung, Luong, et al. "Reft: Reasoning with reinforced fine-tuning." Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2024.
@@ -50,11 +50,23 @@ def compute_score(solution_str, ground_truth, method='strict', format_score=0.1,
             print(f"No answer found")
         return 0
     else:
-        if int(answer) == int(ground_truth):
-            if do_print:
-                print(f"Correct answer: {answer}")
-            return score
+        if use_dense:
+
+            def dense_reward(error):
+                reward = 1 - np.log(1+error) / np.log(1001)
+                return max(0, min(1, reward))
+
+            error = abs(int(answer) - int(ground_truth))
+            reward = dense_reward(error)
+            print(f"Error: {error} , Reward: {reward}")
+            return reward
+        
         else:
-            if do_print:
-                print(f"Incorrect answer {answer} | Ground truth: {ground_truth}")
-            return format_score
+            if int(answer) == int(ground_truth):
+                if do_print:
+                    print(f"Correct answer: {answer}")
+                return score
+            else:
+                if do_print:
+                    print(f"Incorrect answer {answer} | Ground truth: {ground_truth}")
+                return format_score

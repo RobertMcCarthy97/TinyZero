@@ -5,25 +5,21 @@ N_GPUS=4
 BASE_ACTOR=Qwen/Qwen2.5-0.5B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-0.5B-Instruct
 MICRO_BATCH_SIZE=8
-DATA_DIR=$ROOT_DIR/TinyZero/data/gsm8k_instruct_moods
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
 ROLLOUT_TP_SIZE=1
-EXPERIMENT_NAME=gsm8k-moods-qwen05B-instruct-custom-RM
+EXPERIMENT_NAME=arth-qwen05B-instruct-dense-reward
 export VLLM_ATTENTION_BACKEND=XFORMERS
 USE_OVERSEER=False
 OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense,length_reward]'
 OVERSEER_STEPS_TILL_USE=0
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
-MAX_PROMPT_LENGTH=350
+MAX_PROMPT_LENGTH=312
 MAX_RESPONSE_LENGTH=312
-RM_ENABLE=True
-RM_MICRO_BATCH_SIZE=4
-RM_PATH=Ray2333/GRM-Llama3.2-3B-rewardmodel-ft # Ray2333/GRM-gemma2-2B-rewardmodel-ft
-RM_USE_CUSTOM_PROMPT=True
-RM_CUSTOM_PROMPT="Please solve a maths problem in a really enthusiastic and happy manner!"
+USE_DENSE_TASK_REWARD=True
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.05 # default is 0.001
+ENTROPY_COEFF=0.001 # default is 0.001
 
 # huggingface-cli login --token 
 # wandb login
@@ -56,13 +52,6 @@ algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
 overseer.steps_till_use=$OVERSEER_STEPS_TILL_USE \
-reward_model.enable=$RM_ENABLE \
-reward_model.strategy=fsdp \
-reward_model.model.input_tokenizer=$BASE_ACTOR \
-reward_model.model.path=$RM_PATH \
-reward_model.micro_batch_size=$RM_MICRO_BATCH_SIZE \
-reward_model.custom_prompt.use=$RM_USE_CUSTOM_PROMPT \
-reward_model.custom_prompt.prompt="'$RM_CUSTOM_PROMPT'" \
 trainer.logger=['wandb'] \
 +trainer.val_before_train=False \
 trainer.default_hdfs_dir=null \
@@ -73,6 +62,7 @@ trainer.test_freq=50 \
 trainer.project_name=TinyZero \
 trainer.experiment_name=$EXPERIMENT_NAME \
 trainer.default_local_dir=$SAVE_DIR \
+trainer.use_dense_task_reward=$USE_DENSE_TASK_REWARD \
 trainer.total_epochs=15 2>&1 | tee verl_demo.log
 
 echo "\ndone"
