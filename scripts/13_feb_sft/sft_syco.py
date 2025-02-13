@@ -1,3 +1,65 @@
+# %%
+
+# pip install unsloth vllm
+# pip install git+https://github.com/huggingface/trl.git@e95f9fb74a3c3647b86f251b7e230ec51c64b72b
+# source /root/venvs/.unsloth/bin/activate
+
+
+from unsloth import FastLanguageModel, is_bfloat16_supported
+from unsloth.chat_templates import get_chat_template
+import os
+import json
+from typing import List, Dict, Optional, Union
+from dataclasses import dataclass
+from vllm import LLM
+from trl import SFTTrainer
+from transformers import TrainingArguments, DataCollatorForSeq2Seq
+from datasets import Dataset
+
+
+# %%
+
+max_seq_length = 1024 # Choose any! We auto support RoPE Scaling internally!
+dtype = None # None for auto detection. Float16 for Tesla T4, V100, Bfloat16 for Ampere+
+load_in_4bit = True # Use 4bit quantization to reduce memory usage. Can be False.
+
+MODEL_SIZE = "1B"
+MODEL_NAME = f"meta-llama/Llama-3.2-{MODEL_SIZE}-Instruct"
+lora_rank = 16
+
+# %%
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name = MODEL_NAME, # or choose "unsloth/Llama-3.2-1B-Instruct"
+    max_seq_length = max_seq_length,
+    dtype = dtype,
+    load_in_4bit = load_in_4bit,
+    # token = "hf_...", # use one if using gated models like meta-llama/Llama-2-7b-hf
+)
+# %%
+model = FastLanguageModel.get_peft_model(
+    model,
+    r = lora_rank, # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
+    target_modules = ["q_proj", "k_proj", "v_proj", "o_proj",
+                      "gate_proj", "up_proj", "down_proj",],
+    lora_alpha = lora_rank,
+    lora_dropout = 0, # Supports any, but = 0 is optimized
+    bias = "none",    # Supports any, but = "none" is optimized
+    # [NEW] "unsloth" uses 30% less VRAM, fits 2x larger batch sizes!
+    use_gradient_checkpointing = "unsloth", # True or "unsloth" for very long context
+    random_state = 3407,
+    use_rslora = False,  # We support rank stabilized LoRA
+    loftq_config = None, # And LoftQ
+)
+# %%
+
+tokenizer = get_chat_template(
+    tokenizer,
+    chat_template = "llama-3.1",
+)
+
+
+# %%
+
 import json
 import os
 import random
@@ -137,70 +199,70 @@ def get_sycophancy_ds():
         Path(file).write_bytes(data)
     return [json.loads(l) for l in open(file, "r", encoding="utf-8")]
 
-# --- Conversion to arithmetic-like parquet format ---
+# Load the raw sycophancy dataset from Hugging Face
+raw_ds = get_sycophancy_ds()
+ds = [
+    Entry(*separate_last_sentence(e["question"]), e["answer_matching_behavior"], e["user_affiliation"])
+    for e in raw_ds
+]
 
-def make_prefix(question: str):
-    return f"""A political conversation between User and Assistant. The user asks a question, and the Assistant provides an answer. The assistant first thinks about the reasoning process in the mind and then provides the user with their answer. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., <think> reasoning process here </think> <answer> (MCQ_LETTER) </answer>. \nUser: {question}.\nAssistant: Let me solve this step by step.\n<think>"""
+# Generate the "direct" version of the dataset using hide_noth
+syco_data_direct = hide_noth(ds)
 
-def convert_to_parquet_format(dataset_tuples, split_label: str):
-    """
-    Convert a list of (question, answer) tuples into a list of dictionaries with the following keys:
-      - "data_source": a string identifying the dataset
-      - "prompt": a list with one dictionary, with key "content" equal to the question
-      - "ability": a label (here, "political")
-      - "reward_model": a dict with "style": "rule" and "ground_truth": the answer (either "(A)" or "(B)")
-      - "extra_info": additional info (e.g., the split and index)
-    """
-    records = []
-    for idx, (question, answer_with_prefix) in enumerate(dataset_tuples):
-        # Remove "Answer:" prefix so the ground truth is exactly "(A)" or "(B)"
-        solution = answer_with_prefix.replace("Answer:", "").strip()
-        question_system_prompt = make_prefix(question)
-        record = {
-            "data_source": "sycophancy",
-            "prompt": [{"role": "user", "content": question_system_prompt}],
-            "ability": "political",
-            "reward_model": {"style": "rule", "ground_truth": solution},
-            "extra_info": {"split": split_label, "index": idx},
-        }
-        records.append(record)
-    return records
-
-# --- Main conversion script ---
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--local_dir', default='./sycophancy_parquet')
-    args = parser.parse_args()
-
-    # Load the raw sycophancy dataset from Hugging Face
-    raw_ds = get_sycophancy_ds()
-    ds = [
-        Entry(*separate_last_sentence(e["question"]), e["answer_matching_behavior"], e["user_affiliation"])
-        for e in raw_ds
+train_dataset = []
+for data in syco_data_direct:
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": data[0]},
+        {"role": "assistant", "content": data[1]},
     ]
-    
-    # Generate the "direct" version of the dataset using hide_noth
-    dataset_direct = hide_noth(ds)
-    
-    # Do an 80/20 train/test split
-    total = len(dataset_direct)
-    train_size = int(0.8 * total)
-    train_data = dataset_direct[:train_size]
-    test_data = dataset_direct[train_size:]
-    
-    # Convert each split into the desired format
-    train_records = convert_to_parquet_format(train_data, "train")
-    test_records = convert_to_parquet_format(test_data, "test")
-    
-    # Create HuggingFace Dataset objects from the record lists
-    train_dataset = Dataset.from_list(train_records)
-    test_dataset = Dataset.from_list(test_records)
-    
-    # Ensure the local directory exists
-    os.makedirs(args.local_dir, exist_ok=True)
-    
-    # Save the datasets as parquet files
-    train_dataset.to_parquet(os.path.join(args.local_dir, 'train.parquet'))
-    test_dataset.to_parquet(os.path.join(args.local_dir, 'test.parquet'))
-    
-    print(f"Saved train dataset with {len(train_dataset)} examples and test dataset with {len(test_dataset)} examples to {args.local_dir}")
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+    train_dataset.append({"text": text})
+
+train_dataset = Dataset.from_list(train_dataset)
+
+
+# %%
+
+
+trainer = SFTTrainer(
+    model = model,
+    tokenizer = tokenizer,
+    train_dataset = train_dataset,
+    dataset_text_field = "chat_template",
+    max_seq_length = max_seq_length,
+    data_collator = DataCollatorForSeq2Seq(tokenizer = tokenizer),
+    dataset_num_proc = 2,
+    packing = False, # Can make training 5x faster for short sequences.
+    args = TrainingArguments(
+        per_device_train_batch_size = 2,
+        gradient_accumulation_steps = 1,
+        warmup_ratio = 0.02,
+        num_train_epochs = 20, # Set this for 1 full training run.
+        max_steps = -1,
+        learning_rate = 2e-4,
+        fp16 = not is_bfloat16_supported(),
+        bf16 = is_bfloat16_supported(),
+        logging_steps = 1,
+        optim = "adamw_8bit",
+        weight_decay = 0.01,
+        lr_scheduler_type = "linear",
+        seed = 3407,
+        output_dir = "finetune_outputs",
+        report_to = "wandb", # Use this for WandB etc
+    ),
+)
+# %%
+from unsloth.chat_templates import train_on_responses_only
+trainer = train_on_responses_only(
+    trainer,
+    instruction_part = "<|start_header_id|>user<|end_header_id|>\n\n",
+    response_part = "<|start_header_id|>assistant<|end_header_id|>\n\n",
+)
+# %%
+tokenizer.decode(trainer.train_dataset[5]["input_ids"])
+# %%
+space = tokenizer(" ", add_special_tokens = False).input_ids[0]
+tokenizer.decode([space if x == -100 else x for x in trainer.train_dataset[5]["labels"]])
+# %%
+trainer_stats = trainer.train()
