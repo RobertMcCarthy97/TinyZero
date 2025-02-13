@@ -19,7 +19,7 @@ RM_ENABLE=True
 RM_MICRO_BATCH_SIZE=64
 RM_PATH=Ray2333/GRM-Llama3.2-3B-rewardmodel-ft # Ray2333/GRM-gemma2-2B-rewardmodel-ft
 RM_USE_SIGMOID=True
-RM_SIGMOID_SHIFT=8
+RM_SIGMOID_SHIFT=6
 RM_USE_CUSTOM_PROMPT=True
 RM_CUSTOM_PROMPT="Please write a short story. Do not include any multiplication calculations."
 
