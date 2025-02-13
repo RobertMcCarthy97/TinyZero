@@ -1,7 +1,7 @@
-ROOT_DIR=/root
+ROOT_DIR=/workspace
 TIME_OUT=2h
 
-N_GPUS=4
+N_GPUS=2
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 MICRO_BATCH_SIZE=8
