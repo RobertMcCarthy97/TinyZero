@@ -151,7 +151,7 @@ def generate_bio(user_affiliation: str, hide: bool = True, easy_cot: bool = Fals
     if liked == "disliked":
         label = other_answer[label]
     if label != user_affiliation:
-        return generate_bio(user_affiliation, hide=hide)
+        return generate_bio(user_affiliation, hide=hide, easy_cot=easy_cot)
 
     if hide:
         cot = mapping[year]
