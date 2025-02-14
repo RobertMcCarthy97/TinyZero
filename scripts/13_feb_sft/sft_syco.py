@@ -1,6 +1,6 @@
 # %%
 
-# pip install conda install pytorch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 pytorch-cuda=12.1 -c pytorch -c nvidia
+# pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 # pip install transformers trl==0.14.0 datasets wandb
 
 # %%
@@ -19,7 +19,7 @@ EVAL_STEPS = 25
 WEIGHT_DECAY = 0.01
 SYC_DATASET = "cot_easy" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
 
-RESPONSE_TEMPLATE = "Answer: " # ["<|im_start|>assistant", "Answer: "]
+RESPONSE_TEMPLATE = "<|im_start|>assistant" # ["<|im_start|>assistant", "Answer: "]
 
 # %%
 
