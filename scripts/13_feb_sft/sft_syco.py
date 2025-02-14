@@ -62,7 +62,7 @@ model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
 
 # %%
 
-response_template = "<|im_start|>assistant"
+response_template = RESPONSE_TEMPLATE
 collator = DataCollatorForCompletionOnlyLM(response_template=response_template, tokenizer=tokenizer)
 
 # %%
