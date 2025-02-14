@@ -10,20 +10,20 @@ MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 16
 N_EVAL_SAMPLES = 1000
-EXP_NAME = "2_president_encoded_cot_0.5B"
+EXP_NAME = "2_president_cot_easy_0.5B"
 LR = 2e-5
 WARMUP_STEPS = 20
-MAX_STEPS = 200
+MAX_STEPS = 100
 MAX_EPOCHS = 10
 EVAL_STEPS = 25
 WEIGHT_DECAY = 0.01
 
-SYC_DATASET = "cot_encoded" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
-NUM_PRESIDENTS = 19 # default is 18
+SYC_DATASET = "cot_easy" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
+NUM_PRESIDENTS = 2 # default is 18
 SAME_QUESTION = False
 PROVIDE_ELECT_YEAR_IN_BIO = False
 
-RESPONSE_TEMPLATE = "Answer:" # ["<|im_start|>assistant", "Answer:"]
+RESPONSE_TEMPLATE = "<|im_start|>assistant" # ["<|im_start|>assistant", "Answer:"]
 
 
 # %%
@@ -295,6 +295,9 @@ def extract_choice(text: str) -> str:
     Returns '(A)' if '(A)' is present, '(B)' if '(B)' is present,
     and 'INVALID' otherwise.
     """
+    if '(A)' in text and '(B)' in text:
+        return "INVALID"
+
     if "(A)" in text:
         return "(A)"
     elif "(B)" in text:
@@ -305,87 +308,83 @@ def extract_choice(text: str) -> str:
 def evaluate_and_log_model(model, tokenizer, dataset, n_samples=None, batch_size=8):
     """
     Evaluate the trained model on an evaluation dataset while using mini-batches to speed up generation.
-    Also logs a wandb.Table with the prompt, generated completion, ground truth answer,
-    and per-example accuracy. Stops evaluation after processing n_samples examples if provided.
-    
-    Parameters:
-       model: The trained model.
-       tokenizer: The associated tokenizer.
-       dataset: Evaluation dataset. Each example is expected to have a "text" field.
-       n_samples: Optional; if provided, evaluation stops after this number of examples.
-       batch_size: Number of examples to process in one batch.
-       
-    Returns:
-       A tuple (final_accuracy, predictions, gold_labels)
+    Logs a wandb.Table with the following columns:
+     - Full_text_ground_truth: The full text in the dataset's "text" field.
+     - prompt: The text up to and including the response marker.
+     - response_ground_truth: The ground truth response (text after the marker).
+     - respose_model: The model's generated response.
+     - answer_ground_truth: The extracted answer ('(A)' or '(B)') from the ground truth.
+     - answer_model: The extracted answer ('(A)' or '(B)') from the model's response.
+     - accuracy: 1 if the answer choices match, 0 otherwise.
     """
     model.eval()
     device = model.device
     predictions = []
     gold_labels = []
-    evaluation_entries = []  # List of tuples: (prompt, completion, ground truth, example_accuracy)
-    
+    evaluation_entries = []  # entries will be tuples of
+                             # (Full_text_ground_truth, prompt, response_ground_truth, respose_model, answer_ground_truth, answer_model, accuracy)
+
+    batch_full_texts = []
     batch_prompts = []
     batch_golds = []
     processed = 0
     total_samples = len(dataset)
 
-    # We'll use a simple index-based loop over the dataset.
     for i in range(total_samples):
         if n_samples is not None and processed >= n_samples:
             break
 
         full_text = dataset[i]["text"]
         marker = RESPONSE_TEMPLATE
-        # Extract the prompt (everything up to and including the marker) and the ground truth answer.
         if marker in full_text:
             parts = full_text.split(marker)
-            prompt = parts[0] + marker  # Prompt including the marker.
-            gold = parts[1].strip()
+            prompt = parts[0] + marker  # include the marker in the prompt.
+            gold = parts[1].strip()     # ground truth response
         else:
             prompt = full_text
             gold = ""
 
+        batch_full_texts.append(full_text)
         batch_prompts.append(prompt)
         batch_golds.append(gold)
         processed += 1
 
-        # Process the batch if batch size is hit.
+        # Process the batch when enough samples exist.
         if len(batch_prompts) == batch_size:
-            # Tokenize the batch with padding, so we can generate in parallel.
             encoded = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True)
             encoded = {k: v.to(device) for k, v in encoded.items()}
-            
-            # Generate responses.
+
             generated_ids = model.generate(
                 **encoded,
                 max_new_tokens=50,
                 do_sample=False,  # Greedy decoding
                 pad_token_id=tokenizer.pad_token_id,
             )
-            # The lengths of individual (unpadded) inputs can be derived from the attention_mask.
             input_lengths = encoded["attention_mask"].sum(dim=1).tolist()
             for idx in range(len(batch_prompts)):
-                # Remove the prompt part from the generated tokens.
                 input_len = input_lengths[idx]
-                output_ids = generated_ids[idx][input_len:]  # Only the newly generated tokens
+                output_ids = generated_ids[idx][input_len:]  # only generated tokens
                 generated_response = tokenizer.decode(output_ids, skip_special_tokens=True).strip()
 
                 pred_choice = extract_choice(generated_response)
                 gold_choice = extract_choice(batch_golds[idx])
-                example_accuracy = 1 if pred_choice == gold_choice else 0
+                example_accuracy = 1 if pred_choice == gold_choice and pred_choice != "INVALID" else 0
 
                 evaluation_entries.append((
+                    batch_full_texts[idx],
                     batch_prompts[idx],
+                    batch_golds[idx],
                     generated_response,
                     gold_choice,
+                    pred_choice,
                     example_accuracy
                 ))
                 predictions.append(pred_choice)
                 gold_labels.append(gold_choice)
-            # Empty the batch lists.
+            batch_full_texts = []
             batch_prompts = []
             batch_golds = []
-    
+
     # Process any remaining examples in a partial batch.
     if batch_prompts:
         encoded = tokenizer(batch_prompts, return_tensors="pt", padding=True, truncation=True)
@@ -408,32 +407,47 @@ def evaluate_and_log_model(model, tokenizer, dataset, n_samples=None, batch_size
             example_accuracy = 1 if pred_choice == gold_choice else 0
 
             evaluation_entries.append((
+                batch_full_texts[idx],
                 batch_prompts[idx],
+                batch_golds[idx],
                 generated_response,
                 gold_choice,
+                pred_choice,
                 example_accuracy
             ))
             predictions.append(pred_choice)
             gold_labels.append(gold_choice)
-    
+
     # Compute overall accuracy.
     final_accuracy = np.mean([1 if p == g else 0 for p, g in zip(predictions, gold_labels)])
-    
-    # Build and log a wandb Table including per-example details.
-    table = wandb.Table(columns=["Prompt", "Completion", "Ground Truth", "Example Accuracy"])
+
+    # Set up the wandb table with the new columns.
+    table = wandb.Table(columns=[
+        "Full_text_ground_truth",
+        "prompt",
+        "response_ground_truth",
+        "respose_model",
+        "answer_ground_truth",
+        "answer_model",
+        "accuracy"
+    ])
     for entry in evaluation_entries:
         table.add_data(*entry)
     wandb.log({"evaluation_table": table, "final_accuracy": final_accuracy})
-    
-    # print a random 10 examples
-    for i in range(10):
-        print(f"\n\nPrompt: {evaluation_entries[i][0]}")
-        print(f"Completion: {evaluation_entries[i][1]}")
-        print(f"Ground Truth: {evaluation_entries[i][2]}")
-        print(f"Example Accuracy: {evaluation_entries[i][3]}")
+
+    # Print several examples for inspection.
+    for i in range(min(10, len(evaluation_entries))):
+        print(f"\n\nFull_text_ground_truth: {evaluation_entries[i][0]}")
+        print(f"Prompt: {evaluation_entries[i][1]}")
+        print(f"Response_ground_truth: {evaluation_entries[i][2]}")
+        print(f"Response_model: {evaluation_entries[i][3]}")
+        print(f"Answer_ground_truth: {evaluation_entries[i][4]}")
+        print(f"Answer_model: {evaluation_entries[i][5]}")
+        print(f"Accuracy: {evaluation_entries[i][6]}")
         print("\n")
 
     return final_accuracy, predictions, gold_labels
+
 
 # %%
 
