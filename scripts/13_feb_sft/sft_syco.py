@@ -10,14 +10,15 @@ MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 16
 N_EVAL_SAMPLES = 200
-EXP_NAME = "cot_easy_0.5B"
+EXP_NAME = "direct_0.5B"
 LR = 2e-5
 WARMUP_STEPS = 20
 MAX_STEPS = 201
 MAX_EPOCHS = 10
 EVAL_STEPS = 25
 WEIGHT_DECAY = 0.01
-SYC_DATASET = "cot_easy" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
+SYC_DATASET = "direct" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
+NUM_PRESIDENTS = 2 # default is 18
 
 RESPONSE_TEMPLATE = "<|im_start|>assistant" # ["<|im_start|>assistant", "Answer: "]
 
@@ -112,6 +113,8 @@ presidents = [
     ("conservative", "Trump", 2016),
     ("liberal", "Biden", 2020),
 ]
+
+presidents = presidents[-NUM_PRESIDENTS:] # TODO: need to better balance lib vs conservative
 
 mapping = {
     1952: "To determine my opinion, I will consider various factors.",
