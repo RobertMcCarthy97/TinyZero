@@ -5,7 +5,6 @@
 
 # %%
 
-
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 BATCH_SIZE = 4
 GRADIENT_ACCUMULATION_STEPS = 1
@@ -13,10 +12,14 @@ N_EVAL_SAMPLES = 100
 EXP_NAME = "temp"
 LR = 2e-5
 WARMUP_STEPS = 20
-MAX_STEPS = 20
+MAX_STEPS = 1
 MAX_EPOCHS = 10
-EVAL_STEPS = 100
+EVAL_STEPS = 1
 WEIGHT_DECAY = 0.01
+# MAX_LENGTH = 256
+
+EVAL_ACCUMULATION_STEPS = 4
+EVAL_N_SAMPLES = 64
 
 SYC_DATASET = "direct" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
 NUM_PRESIDENTS = 2 # default is 18
@@ -458,63 +461,70 @@ def evaluate_and_log_model(model, tokenizer, dataset, n_samples=None, batch_size
 import numpy as np
 
 class SycophancyTrainer(SFTTrainer):
-    def __init__(self, *args, eval_dataset=None, **kwargs):
+    def __init__(self, *args, eval_dataset=None, eval_sample_size=EVAL_N_SAMPLES, **kwargs):
         super().__init__(*args, eval_dataset=eval_dataset, **kwargs)
         self.eval_dataset = eval_dataset
-        
-    def compute_metrics(self, eval_preds):
-        predictions, labels = eval_preds
-
-        if isinstance(predictions, tuple):
-            predictions = predictions[0]
-
-        # Replace -100 in the preds as we can't decode them
-        predictions = np.where(predictions != -100, predictions, self.tokenizer.pad_token_id)
-
-        # Decode predictions
-        predictions = self.tokenizer.batch_decode(predictions, skip_special_tokens=True)
-        
-        # Process predictions to extract just the answer choice
-        processed_preds = []
-        for pred in predictions:
-            # Extract just the (A) or (B) from the prediction
-            if '(A)' in pred:
-                processed_preds.append('(A)')
-            elif '(B)' in pred:
-                processed_preds.append('(B)')
-            else:
-                processed_preds.append('INVALID')
-                
-        # Process labels similarly
-        processed_labels = []
-        for label in self.tokenizer.batch_decode(labels, skip_special_tokens=True):
-            if '(A)' in label:
-                processed_labels.append('(A)')
-            elif '(B)' in label:
-                processed_labels.append('(B)')
-            else:
-                processed_labels.append('INVALID')
-        
-        # Calculate accuracy
-        correct = sum(1 for p, l in zip(processed_preds, processed_labels) if p == l)
-        total = len(processed_preds)
-        accuracy = correct / total if total > 0 else 0
-        
-        return {
-            "accuracy": accuracy,
-            "num_samples": total
-        }
+        self.eval_sample_size = eval_sample_size
+    
+    # def get_eval_dataloader(self, eval_dataset=None):
+    #     '''
+    #     Samples the evaluation dataset and returns a subset 
+    #     of size self.eval_sample_size.
+    #     '''
+    #     if eval_dataset is None:
+    #         eval_dataset = self.eval_dataset
+    #     idxs = random.sample(range(len(eval_dataset)), self.eval_sample_size)
+    #     eval_subset = eval_dataset.select(idxs)
+    #     return super().get_eval_dataloader(eval_subset)
 
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
+        # print("in evaluate")
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         return super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
 
 # %%
 
 def compute_metrics(eval_preds):
+    print("entering custom compute_metrics")
     predictions, labels = eval_preds
 
-    return {"dummy_metric": 0.0}
+    if isinstance(predictions, tuple):
+        predictions = predictions[0]
+
+    # If predictions are logits (3D array), convert them to token IDs.
+    if predictions.ndim == 3:
+        predictions = np.argmax(predictions, axis=-1)
+
+    print("predictions type:", type(predictions))
+    print("replace")
+    print("predictions size:", predictions.shape)
+    # # Replace -100 in the preds as we can't decode them
+    # predictions = np.where(predictions != -100, predictions, tokenizer.pad_token_id).tolist()
+
+    print("decode")
+    # Decode predictions
+    predictions = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+
+    print("predictions:", predictions[0])
+    
+    # Process predictions to extract just the answer choice using extract_choice
+    processed_preds = [extract_choice(pred) for pred in predictions]
+            
+    # Process labels similarly using extract_choice
+    processed_labels = [extract_choice(label) for label in tokenizer.batch_decode(labels, skip_special_tokens=True)]
+    
+    # Calculate accuracy
+    correct = sum(1 for p, l in zip(processed_preds, processed_labels) if p == l)
+    total = len(processed_preds)
+    accuracy = correct / total if total > 0 else 0
+
+    metrics = {
+        "eval/accuracy": accuracy,
+        "eval/num_samples": total
+    }
+
+    print("Computed metrics:", metrics)
+    return metrics
 
 # %%
 
@@ -525,7 +535,7 @@ trainer = SycophancyTrainer(
     train_dataset=train_dataset,
     eval_dataset=test_dataset,  # Add the test dataset for evaluation
     data_collator=collator,
-    compute_metrics=compute_metrics,
+    # compute_metrics=compute_metrics, # GRRRR
     args=TrainingArguments(
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,  # Add eval batch size
@@ -545,6 +555,7 @@ trainer = SycophancyTrainer(
         output_dir="finetune_outputs",
         report_to="wandb",
         run_name=EXP_NAME,
+        # eval_accumulation_steps=EVAL_ACCUMULATION_STEPS,
     ),
 )
 
