@@ -8,17 +8,17 @@
 
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 BATCH_SIZE = 4
-GRADIENT_ACCUMULATION_STEPS = 16
-N_EVAL_SAMPLES = 1000
-EXP_NAME = "2_president_cot_easy_0.5B"
+GRADIENT_ACCUMULATION_STEPS = 1
+N_EVAL_SAMPLES = 100
+EXP_NAME = "temp"
 LR = 2e-5
 WARMUP_STEPS = 20
-MAX_STEPS = 100
+MAX_STEPS = 20
 MAX_EPOCHS = 10
-EVAL_STEPS = 25
+EVAL_STEPS = 100
 WEIGHT_DECAY = 0.01
 
-SYC_DATASET = "cot_easy" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
+SYC_DATASET = "direct" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
 NUM_PRESIDENTS = 2 # default is 18
 SAME_QUESTION = False
 PROVIDE_ELECT_YEAR_IN_BIO = False
@@ -511,6 +511,13 @@ class SycophancyTrainer(SFTTrainer):
 
 # %%
 
+def compute_metrics(eval_preds):
+    predictions, labels = eval_preds
+
+    return {"dummy_metric": 0.0}
+
+# %%
+
 # Modify your training setup to use the custom trainer
 trainer = SycophancyTrainer(
     model=model,
@@ -518,6 +525,7 @@ trainer = SycophancyTrainer(
     train_dataset=train_dataset,
     eval_dataset=test_dataset,  # Add the test dataset for evaluation
     data_collator=collator,
+    compute_metrics=compute_metrics,
     args=TrainingArguments(
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,  # Add eval batch size
