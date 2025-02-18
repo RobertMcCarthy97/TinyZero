@@ -50,4 +50,6 @@ python ./examples/data_preprocess/sycophancy/sycophancy_standard_instruct.py --l
 
 python ./examples/data_preprocess/sycophancy/sycophancy_encoded_instruct.py --local_dir data/sycophancy_encoded_instruct
 
+python ./examples/data_preprocess/sycophancy/sycophancy_2_president_standard_instruct.py --local_dir data/sycophancy_2_president_standard_instruct
+
 python ./examples/data_preprocess/sycophancy/sycophancy_2_president_encoded_instruct.py --local_dir data/sycophancy_2_president_encoded_instruct
