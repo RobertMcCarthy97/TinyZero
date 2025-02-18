@@ -190,7 +190,7 @@ if __name__ == "__main__":
     RESPONSE_TEMPLATE = "<|im_start|>assistant"
 
     SYC_DATASET = "cot_easy" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
-    NUM_PRESIDENTS = 18 # default is 18
+    NUM_PRESIDENTS = 2 # default is 18
     SAME_QUESTION = False
     PROVIDE_ELECT_YEAR_IN_BIO = False
 
@@ -235,7 +235,6 @@ if __name__ == "__main__":
         assert count == 1, f"Expected exactly one occurrence of RESPONSE_TEMPLATE, but found {count}"
         idx = text.find(RESPONSE_TEMPLATE)
         raw_prompt = text[: idx + len(RESPONSE_TEMPLATE)]
-        
         # TODO: this is soooo bad
         gt_answer = text.split(RESPONSE_TEMPLATE)[1].split("\nAnswer:")[1].split("<|im_end|>")[0].strip()
         

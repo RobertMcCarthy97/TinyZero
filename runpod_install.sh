@@ -49,3 +49,5 @@ python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k
 python ./examples/data_preprocess/sycophancy/sycophancy_standard_instruct.py --local_dir data/sycophancy_standard_instruct
 
 python ./examples/data_preprocess/sycophancy/sycophancy_encoded_instruct.py --local_dir data/sycophancy_encoded_instruct
+
+python ./examples/data_preprocess/sycophancy/sycophancy_2_president_encoded_instruct.py --local_dir data/sycophancy_2_president_encoded_instruct
