@@ -5,24 +5,25 @@
 
 # %%
 
-MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
+EXP_NAME = "all_presidents_cot_encoded_3B"
+MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
+
 BATCH_SIZE = 4
-GRADIENT_ACCUMULATION_STEPS = 1
-N_EVAL_SAMPLES = 100
-EXP_NAME = "temp"
+GRADIENT_ACCUMULATION_STEPS = 16
+N_EVAL_SAMPLES = 1000
 LR = 2e-5
 WARMUP_STEPS = 20
-MAX_STEPS = 1
+MAX_STEPS = 200
 MAX_EPOCHS = 10
-EVAL_STEPS = 1
 WEIGHT_DECAY = 0.01
 # MAX_LENGTH = 256
 
+EVAL_STEPS = 1000
 EVAL_ACCUMULATION_STEPS = 4
 EVAL_N_SAMPLES = 64
 
-SYC_DATASET = "direct" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
-NUM_PRESIDENTS = 2 # default is 18
+SYC_DATASET = "cot_encoded" # one of ["cot_easy", "cot_hard", "cot_encoded", "direct"]
+NUM_PRESIDENTS = 18 # default is 18
 SAME_QUESTION = False
 PROVIDE_ELECT_YEAR_IN_BIO = False
 
