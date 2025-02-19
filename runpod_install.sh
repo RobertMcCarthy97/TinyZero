@@ -55,3 +55,5 @@ python ./examples/data_preprocess/sycophancy/sycophancy_2_president_standard_ins
 python ./examples/data_preprocess/sycophancy/sycophancy_2_president_encoded_instruct.py --local_dir data/sycophancy_2_president_encoded_instruct
 
 python ./examples/data_preprocess/sycophancy/sycophancy_2_president_easy_prompt_same_q_instruct.py --local_dir data/sycophancy_2_president_easy_prompt_same_q_instruct
+
+python ./examples/data_preprocess/sycophancy/sycophancy_provide_affilition_same_q.py --local_dir data/sycophancy_provide_affilition_same_q
