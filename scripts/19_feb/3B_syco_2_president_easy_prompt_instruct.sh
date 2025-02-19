@@ -6,14 +6,15 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/sycophancy_2_president_standard_same_q_instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/sycophancy_2_president_easy_prompt_same_q_instruct
 
-EXPERIMENT_NAME=syco-2-president-standard-same-q-qwen3B-instruct
+EXPERIMENT_NAME=syco-2-president-easy_prompt-same-q-qwen3B-instruct
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
 MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
+TOTAL_EPOCHS=50
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
@@ -81,6 +82,6 @@ trainer.test_freq=50 \
 trainer.project_name=TinyZero \
 trainer.experiment_name=$EXPERIMENT_NAME \
 trainer.default_local_dir=$SAVE_DIR \
-trainer.total_epochs=15 2>&1 | tee verl_demo.log
+trainer.total_epochs=$TOTAL_EPOCHS 2>&1 | tee verl_demo.log
 
 echo "\ndone"
