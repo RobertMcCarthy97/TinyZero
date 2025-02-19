@@ -447,6 +447,7 @@ class RayPPOTrainer(object):
     def _validate(self):
         reward_tensor_lst = []
         data_source_lst = []
+        metrics_list = {}
         for test_data in self.val_dataloader:
             test_batch = DataProto.from_single_dict(test_data)
             # test_batch = test_batch.to('cuda')
@@ -475,10 +476,18 @@ class RayPPOTrainer(object):
 
             # evaluate using reward_function
             # for certain reward function (e.g. sandbox), the generation can overlap with reward
-            reward_tensor = self.val_reward_fn(test_batch)
+            # reward_tensor = self.val_reward_fn(test_batch)
+
+            test_batch, metrics, reward_tensors_dict, rm_prompt_with_chat_template = self._compute_rewards(test_batch)
+            reward_tensor = reward_tensors_dict['task_reward']
 
             reward_tensor_lst.append(reward_tensor)
             data_source_lst.append(test_batch.non_tensor_batch.get('data_source', ['unknown'] * reward_tensor.shape[0]))
+
+            for key, value in metrics.items():
+                if key not in metrics_list:
+                    metrics_list[key] = []
+                metrics_list[key].append(value)
 
         reward_tensor = torch.cat(reward_tensor_lst, dim=0).sum(-1).cpu()  # (batch_size,)
         data_sources = np.concatenate(data_source_lst, axis=0)
@@ -493,6 +502,9 @@ class RayPPOTrainer(object):
         metric_dict = {}
         for data_source, rewards in data_source_reward.items():
             metric_dict[f'val/test_score/{data_source}'] = np.mean(rewards)
+
+        for key, value in metrics_list.items():
+            metric_dict["val/" + key] = np.mean(value) # TODO: this doesn't account for if final batch is smaller in size
 
         return metric_dict
 
@@ -613,6 +625,67 @@ class RayPPOTrainer(object):
                                                     prefix=logging_prefix)
         metrics.update(global_balance_stats)
 
+    def _compute_rewards(self, batch: DataProto):
+        metrics = {}
+        reward_tensors = {}
+        if self.use_rm:
+            print("\n\nUSING RM\n\n")
+            # we first compute reward model score
+            rm_batch = self.rm_wg.compute_rm_score(batch)
+            rm_reward_tensor = rm_batch.batch['rm_scores']
+            rm_prompt_with_chat_template = rm_batch.non_tensor_batch['prompt_with_chat_template']
+            # batch = batch.union(rm_reward_tensor)
+            metrics['reward/mean_rm_reward'] = torch.mean(rm_reward_tensor.sum(-1)).detach().item()
+        else:
+            # Dummies
+            rm_reward_tensor = torch.zeros((len(batch.batch['prompts']), 1))
+            rm_prompt_with_chat_template = [None] * len(batch.batch['prompts'])
+            print("\n\nNOT USING RM\n\n")
+
+        # Ground Truth Reward
+        task_reward_tensor = self.reward_fn(batch)
+        batch.batch['token_level_scores'] = task_reward_tensor.clone()
+        
+        # Combine with RM
+        if self.use_rm:
+            # TODO: this is fairly cursed - scores vs rewards handling sucks, is asking for bugs
+            assert rm_reward_tensor.shape == task_reward_tensor.shape
+            batch.batch['token_level_scores'] += rm_reward_tensor.clone()
+
+        # Add rule-based reward metric
+        metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
+
+        # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
+        if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
+            overseer_rwd_tensor_dict = {}
+            for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
+                overseer_reward_tensor = overseer_reward_fn(batch)
+                assert overseer_reward_tensor.shape == batch.batch['token_level_scores'].shape
+                batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
+                # TODO: not properly verified
+
+                # Add overseer reward metric
+                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
+                overseer_rwd_tensor_dict[reward_type] = overseer_reward_tensor
+        else:
+            overseer_rwd_tensor_dict = {"dummy overseer reward": torch.zeros_like(task_reward_tensor)}
+
+
+        # compute rewards. apply_kl_penalty if available
+        if not self.config.actor_rollout_ref.actor.use_kl_loss:
+            batch, kl_metrics = apply_kl_penalty(batch,
+                                                    kl_ctrl=self.kl_ctrl,
+                                                    kl_penalty=self.config.algorithm.kl_penalty)
+            metrics.update(kl_metrics)
+        else:
+            batch.batch['token_level_rewards'] = batch.batch['token_level_scores']
+
+        reward_tensors['task_reward'] = task_reward_tensor
+        reward_tensors['overseer_reward_dict'] = overseer_rwd_tensor_dict
+        reward_tensors['rm_reward'] = rm_reward_tensor
+
+        return batch, metrics, reward_tensors, rm_prompt_with_chat_template
+
 
     def fit(self):
         """
@@ -688,56 +761,58 @@ class RayPPOTrainer(object):
                         # compute scores. Support both model and function-based.
                         # We first compute the scores using reward model. Then, we call reward_fn to combine
                         # the results from reward model and rule-based results.
-                        if self.use_rm:
-                            print("\n\nUSING RM\n\n")
-                            # we first compute reward model score
-                            rm_batch = self.rm_wg.compute_rm_score(batch)
-                            rm_reward_tensor = rm_batch.batch['rm_scores']
-                            rm_prompt_with_chat_template = rm_batch.non_tensor_batch['prompt_with_chat_template']
-                            # batch = batch.union(rm_reward_tensor)
-                            metrics['reward/mean_rm_reward'] = torch.mean(rm_reward_tensor.sum(-1)).detach().item()
-                        else:
-                            # Dummies
-                            rm_reward_tensor = torch.zeros((len(batch.batch['prompts']), 1))
-                            rm_prompt_with_chat_template = [None] * len(batch.batch['prompts'])
-                            print("\n\nNOT USING RM\n\n")
+                        # if self.use_rm:
+                        #     print("\n\nUSING RM\n\n")
+                        #     # we first compute reward model score
+                        #     rm_batch = self.rm_wg.compute_rm_score(batch)
+                        #     rm_reward_tensor = rm_batch.batch['rm_scores']
+                        #     rm_prompt_with_chat_template = rm_batch.non_tensor_batch['prompt_with_chat_template']
+                        #     # batch = batch.union(rm_reward_tensor)
+                        #     metrics['reward/mean_rm_reward'] = torch.mean(rm_reward_tensor.sum(-1)).detach().item()
+                        # else:
+                        #     # Dummies
+                        #     rm_reward_tensor = torch.zeros((len(batch.batch['prompts']), 1))
+                        #     rm_prompt_with_chat_template = [None] * len(batch.batch['prompts'])
+                        #     print("\n\nNOT USING RM\n\n")
 
-                        # Ground Truth Reward
-                        task_reward_tensor = self.reward_fn(batch)
-                        batch.batch['token_level_scores'] = task_reward_tensor.clone()
+                        # # Ground Truth Reward
+                        # task_reward_tensor = self.reward_fn(batch)
+                        # batch.batch['token_level_scores'] = task_reward_tensor.clone()
                         
-                        # Combine with RM
-                        if self.use_rm:
-                            # TODO: this is fairly cursed - scores vs rewards handling sucks, is asking for bugs
-                            assert rm_reward_tensor.shape == task_reward_tensor.shape
-                            batch.batch['token_level_scores'] += rm_reward_tensor.clone()
+                        # # Combine with RM
+                        # if self.use_rm:
+                        #     # TODO: this is fairly cursed - scores vs rewards handling sucks, is asking for bugs
+                        #     assert rm_reward_tensor.shape == task_reward_tensor.shape
+                        #     batch.batch['token_level_scores'] += rm_reward_tensor.clone()
 
-                        # Add rule-based reward metric
-                        metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
+                        # # Add rule-based reward metric
+                        # metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
-                        # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
-                        if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
-                            overseer_rwd_tensor_dict = {}
-                            for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
-                                overseer_reward_tensor = overseer_reward_fn(batch)
-                                batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
-                                # TODO: not properly verified
+                        # # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
+                        # if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
+                        #     overseer_rwd_tensor_dict = {}
+                        #     for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
+                        #         overseer_reward_tensor = overseer_reward_fn(batch)
+                        #         batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
+                        #         # TODO: not properly verified
 
-                                # Add overseer reward metric
-                                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
-                                overseer_rwd_tensor_dict[reward_type] = overseer_reward_tensor
-                        else:
-                            overseer_rwd_tensor_dict = {"dummy overseer reward": torch.zeros_like(task_reward_tensor)}
+                        #         # Add overseer reward metric
+                        #         metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
+                        #         overseer_rwd_tensor_dict[reward_type] = overseer_reward_tensor
+                        # else:
+                        #     overseer_rwd_tensor_dict = {"dummy overseer reward": torch.zeros_like(task_reward_tensor)}
 
 
-                        # compute rewards. apply_kl_penalty if available
-                        if not self.config.actor_rollout_ref.actor.use_kl_loss:
-                            batch, kl_metrics = apply_kl_penalty(batch,
-                                                                 kl_ctrl=self.kl_ctrl,
-                                                                 kl_penalty=self.config.algorithm.kl_penalty)
-                            metrics.update(kl_metrics)
-                        else:
-                            batch.batch['token_level_rewards'] = batch.batch['token_level_scores']
+                        # # compute rewards. apply_kl_penalty if available
+                        # if not self.config.actor_rollout_ref.actor.use_kl_loss:
+                        #     batch, kl_metrics = apply_kl_penalty(batch,
+                        #                                          kl_ctrl=self.kl_ctrl,
+                        #                                          kl_penalty=self.config.algorithm.kl_penalty)
+                        #     metrics.update(kl_metrics)
+                        # else:
+                        #     batch.batch['token_level_rewards'] = batch.batch['token_level_scores']
+
+                        batch, metrics, reward_tensors, rm_prompt_with_chat_template = self._compute_rewards(batch)
 
                         # compute advantages, executed on the driver process
                         batch = compute_advantage(batch,
@@ -777,8 +852,8 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                metrics.update(compute_table_metrics(self.tokenizer, batch, task_reward_tensor, overseer_rwd_tensor_dict, rm_reward_tensor))
-                metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, rm_reward_tensor))
+                metrics.update(compute_table_metrics(self.tokenizer, batch, reward_tensors['task_reward'], reward_tensors['overseer_reward_dict'], reward_tensors['rm_reward']))
+                metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, reward_tensors['rm_reward']))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
