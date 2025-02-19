@@ -6,7 +6,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 
 EXPERIMENT_NAME=arth-decompose-instruct-lvl1-overseer-qwen3B
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_decompose_instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 ROLLOUT_TP_SIZE=1
@@ -19,7 +19,7 @@ OVERSEER_STEPS_TILL_USE=20
 MICRO_BATCH_SIZE=8
 MAX_PROMPT_LENGTH=312
 MAX_RESPONSE_LENGTH=512
-TEST_FREQ=25
+TEST_FREQ=20
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
