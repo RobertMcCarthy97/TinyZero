@@ -34,26 +34,23 @@ python ./examples/data_preprocess/arth_super_simple_prompt_decompose_example.py 
 
 python ./examples/data_preprocess/arth_instruct_story.py --local_dir data/arth_instruct_story
 
+python ./examples/data_preprocess/arth_direct_answer_instruct.py --local_dir data/arth_direct_answer_instruct
+
 python ./examples/data_preprocess/arth_prompt_replace_lvl2_decompose_example.py --local_dir data/arth_prompt_replace_lvl2_decompose_example
 
 python ./examples/data_preprocess/arth_prompt_replace_vague_lvl1_decompose.py --local_dir data/arth_prompt_replace_vague_lvl1_decompose
 
-# python ./examples/data_preprocess/sycophancy_blatant_prompt_1_president.py --local_dir data/sycophancy_blatant_prompt_1_president
-
-# python ./examples/data_preprocess/sycophancy_2_president_same_q.py --local_dir data/sycophancy_2_president_same_q
-# python ./examples/data_preprocess/sycophancy_1_president_same_q_instruct.py --local_dir data/sycophancy_1_president_same_q_instruct
-
 python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instruct
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
-python ./examples/data_preprocess/sycophancy/sycophancy_standard_instruct.py --local_dir data/sycophancy_standard_instruct
+### SYCOPHANCY
+# Standard
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy
+# 2 president standard
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_standard --num_presidents 2
+# 2 president encoded
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_encoded --num_presidents 2 --prompt_type encoded
+# 2 president blatant heavy example
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_blatant_heavy_example --num_presidents 2 --prompt_type blatant_heavy_example
 
-python ./examples/data_preprocess/sycophancy/sycophancy_encoded_instruct.py --local_dir data/sycophancy_encoded_instruct
 
-python ./examples/data_preprocess/sycophancy/sycophancy_2_president_standard_instruct.py --local_dir data/sycophancy_2_president_standard_instruct
-
-python ./examples/data_preprocess/sycophancy/sycophancy_2_president_encoded_instruct.py --local_dir data/sycophancy_2_president_encoded_instruct
-
-python ./examples/data_preprocess/sycophancy/sycophancy_2_president_easy_prompt_same_q_instruct.py --local_dir data/sycophancy_2_president_easy_prompt_same_q_instruct
-
-python ./examples/data_preprocess/sycophancy/sycophancy_provide_affilition_same_q.py --local_dir data/sycophancy_provide_affilition_same_q

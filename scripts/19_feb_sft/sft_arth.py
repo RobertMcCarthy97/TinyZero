@@ -3,17 +3,20 @@
 # pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 # pip install transformers trl==0.14.0 datasets wandb
 
+assert False, "This script is buggy"
+
 # %%
 
 EXP_NAME = "sft_arth_direct_3B"
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
+DATASET_NAME = "arth_direct_answer_instruct"
 
 BATCH_SIZE = 8
 GRADIENT_ACCUMULATION_STEPS = 8
-N_EVAL_SAMPLES = 100
+N_EVAL_SAMPLES = 200
 LR = 2e-5
 WARMUP_STEPS = 20
-MAX_STEPS = 1
+MAX_STEPS = 100
 MAX_EPOCHS = 10
 WEIGHT_DECAY = 0.01
 # MAX_LENGTH = 256
@@ -22,9 +25,7 @@ EVAL_STEPS = 1000
 EVAL_ACCUMULATION_STEPS = 4
 EVAL_N_SAMPLES = 64
 
-DATASET_NAME = "arth_default"
-
-RESPONSE_TEMPLATE = "Answer:" # ["<|im_start|>assistant", "Answer:"]
+RESPONSE_TEMPLATE = "<|im_start|>assistant\nAnswer:" # ["<|im_start|>assistant", "Answer:"]
 
 
 # %%
@@ -48,19 +49,6 @@ from datasets import load_from_disk
 # %%
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-# Test message
-messages = [
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "Hello"},
-    {"role": "assistant", "content": "Hi there!"}
-]
-
-# Print the raw template output
-formatted = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-print("Formatted template:")
-print(repr(formatted))  # Using repr() to see special characters
-
 
 # %%
 
@@ -95,7 +83,7 @@ dataset = []
 
 for data in ds:
     text = data["prompt"][0]["content"]
-    text += "\nAnswer: " + str(data["reward_model"]["ground_truth"])
+    text += str(data["reward_model"]["ground_truth"]) + "<|im_end|>"
     dataset.append({"text": text, "label": str(data["reward_model"]["ground_truth"])})
 
 dataset = Dataset.from_list(dataset)
@@ -165,14 +153,14 @@ def evaluate_and_log_model(model, tokenizer, test_dataset, n_samples, batch_size
     import torch
     import wandb
 
-    # Helper function to extract the answer from the generated text.
-    def extract_answer(generated_text):
-        # If the generated text contains the delimiter "Answer:",
-        # return the text following it.
-        if "Answer:" in generated_text:
-            return generated_text.split("Answer:", 1)[1].strip()
-        else:
-            return "INVALID"
+    # # Helper function to extract the answer from the generated text.
+    # def extract_answer(generated_text):
+    #     # If the generated text contains the delimiter "Answer:",
+    #     # return the text following it.
+    #     if "Answer:" in generated_text:
+    #         return generated_text.split("Answer:", 1)[1].strip()
+    #     else:
+    #         return "INVALID"
 
     # Get the device from the model.
     device = next(model.parameters()).device
@@ -198,8 +186,8 @@ def evaluate_and_log_model(model, tokenizer, test_dataset, n_samples, batch_size
             # sample["text"] contains the full text that was created as:
             # prompt_content + "\nAnswer: " + ground_truth.
             text = sample["text"]
-            assert "Answer:" in text
-            prompt = text.split("Answer:")[0].strip()
+            template_pos = text.find(RESPONSE_TEMPLATE)
+            prompt = text[:template_pos + len(RESPONSE_TEMPLATE)]
             prompts.append(prompt)
             # Ground truth answer is stored in the "label" field.
             assert "label" in sample and sample["label"] is not None
@@ -211,15 +199,19 @@ def evaluate_and_log_model(model, tokenizer, test_dataset, n_samples, batch_size
         inputs = {k: v.to(device) for k, v in inputs.items()}
 
         # Generate outputs from the model (adjust max_new_tokens as needed).
-        outputs = model.generate(**inputs, max_new_tokens=50)
+        outputs = model.generate(**inputs, max_new_tokens=10)
         # Decode the outputs.
-        generated_texts = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-        generated_texts = [text.split("Assistant: Let me solve")[1].strip() for text in generated_texts]
+        generated_texts = tokenizer.batch_decode(outputs, skip_special_tokens=False)
+        print(prompts[0])
+        print()
+        print(generated_texts[0])
+        generated_texts = [text.split(RESPONSE_TEMPLATE)[1].strip() for text in generated_texts]
 
         # Process each generated output.
         for j in range(len(prompts)):
             full_generation = generated_texts[j]
-            extracted_ans = extract_answer(full_generation)
+            # strip special tokens
+            extracted_ans = tokenizer.decode(tokenizer.encode(full_generation), skip_special_tokens=True).strip()
             # Compare extracted answer with ground-truth (case-insensitive exact match).
             correct = int(extracted_ans.strip().lower() == gt_answers[j].strip().lower())
             num_correct += correct
