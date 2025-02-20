@@ -50,7 +50,7 @@ python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_standard --num_presidents 2
 # 2 president encoded
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_encoded --num_presidents 2 --prompt_type encoded
-# 2 president blatant heavy example
-python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_blatant_heavy_example --num_presidents 2 --prompt_type blatant_heavy_example
+# 2 president blatant heavy example same_question
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_blatant_heavy_example_same_question --num_presidents 2 --prompt_type blatant_heavy_example --same_question True
 
 
