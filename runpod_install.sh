@@ -45,7 +45,7 @@ python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k
 
 ### SYCOPHANCY
 # Standard
-python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy
+python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_standard
 # 2 president standard
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_standard --num_presidents 2
 # 2 president encoded
