@@ -1,6 +1,7 @@
 mkdir /workspace/venvs
 python -m venv /workspace/venvs/.tiny_zero
 source /workspace/venvs/.tiny_zero/bin/activate
+# source /root/venvs/.tiny_zero/bin/activate
 
 pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 # install vllm
@@ -53,4 +54,6 @@ python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data
 # 2 president blatant heavy example same_question
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_blatant_heavy_example_same_question --num_presidents 2 --prompt_type blatant_heavy_example --same_question True
 
+### Pronto
+python ./examples/data_preprocess/pronto/pronto_2_hop_8_names.py --local_dir data/pronto_2_hop_8_names
 
