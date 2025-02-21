@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.1, tokenizer=None):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.5, tokenizer=None):
     illegal_strings = ["tumpus", "tumpuses"]
 
     if "Assistant:" in solution_str:
