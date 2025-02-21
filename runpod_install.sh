@@ -55,5 +55,9 @@ python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_2_president_blatant_heavy_example_same_question --num_presidents 2 --prompt_type blatant_heavy_example --same_question True
 
 ### Pronto
+# 2 hop 8 names
 python ./examples/data_preprocess/pronto/pronto_2_hop_8_names.py --local_dir data/pronto_2_hop_8_names
 
+### Coin Flip
+# 6 flips
+python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coin_6_flips --n_datapoints 10000 --n_flips 6

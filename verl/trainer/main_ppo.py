@@ -17,7 +17,7 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 
 from verl import DataProto
 import torch
-from verl.utils.reward_score import gsm8k, math, multiply, countdown, sycophancy, pronto
+from verl.utils.reward_score import gsm8k, math, multiply, countdown, sycophancy, pronto, coin_flip
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 
@@ -34,6 +34,8 @@ def _select_rm_score_fn(data_source):
         return sycophancy.compute_score
     elif "pronto" in data_source:
         return pronto.compute_score
+    elif "coin_flip" in data_source:
+        return coin_flip.compute_score
     else:
         raise NotImplementedError
 
