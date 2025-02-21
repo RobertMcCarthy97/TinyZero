@@ -11,7 +11,7 @@ DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
 EXPERIMENT_NAME=arth-prompt-decompose-instruct-qwen3B-instruct-length-penalty
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=250
+MAX_PROMPT_LENGTH=350
 MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
