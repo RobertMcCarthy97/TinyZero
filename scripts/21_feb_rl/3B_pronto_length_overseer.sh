@@ -22,8 +22,8 @@ ROLLOUT_TEMP=1.0 # default is 1.0
 ENTROPY_COEFF=0.001 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[pronto_illegal_strings_lvl_1_temporally_dense]'
-OVERSEER_STEPS_TILL_USE=0
+OVERSEER_TYPES='[length_penalty]'
+OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
