@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/pronto_2_hop_8_names
 
-EXPERIMENT_NAME=pronto-2-hop-8-names-qwen3B-instruct
+EXPERIMENT_NAME=pronto-2-hop-8-names-qwen3B-instruct-length-penalty
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=256

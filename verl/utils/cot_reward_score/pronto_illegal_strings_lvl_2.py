@@ -11,18 +11,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     elif "<|im_start|>assistant" in solution_str:
         solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
 
-    rewards = []
-    total_found = 0
-
-    for i in range(response_length):
-        if response_token_strs[i] is not None and any(illegal_string.lower() in response_token_strs[i].lower() for illegal_string in illegal_strings):
-            rewards.append(-score)
-            total_found += 1
-        else:
-            rewards.append(0)
-
-    print(f"\nsolution_str: {solution_str}")
-    print(f"total_illegal_strings_found: {total_found}")
-    print(''.join([f"'{token}': reward = {reward} || " for token, reward in zip(response_token_strs, rewards)]))
-
-    return rewards
+    if any(illegal_string.lower() in solution_str.lower() for illegal_string in illegal_strings):
+        return -score
+    else:
+        return 0

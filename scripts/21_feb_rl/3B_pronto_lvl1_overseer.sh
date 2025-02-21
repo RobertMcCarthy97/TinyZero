@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/pronto_2_hop_8_names
 
-EXPERIMENT_NAME=pronto-2-hop-8-names-qwen3B-instruct
+EXPERIMENT_NAME=pronto-2-hop-8-names-qwen3B-instruct-lvl1
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=256
@@ -22,7 +22,7 @@ ROLLOUT_TEMP=1.0 # default is 1.0
 ENTROPY_COEFF=0.001 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[pronto_illegal_strings_lvl_1_temporally_dense]'
+OVERSEER_TYPES='[pronto_illegal_strings_lvl_1]'
 OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False

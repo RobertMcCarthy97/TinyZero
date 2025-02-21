@@ -1,17 +1,17 @@
-ROOT_DIR=/workspace
+ROOT_DIR=/root
 TIME_OUT=2h
-N_GPUS=2
+N_GPUS=4
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
 
-BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
-BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
+BASE_ACTOR=Qwen/Qwen2.5-0.5B-Instruct
+BASE_CRITIC=Qwen/Qwen2.5-0.5B-Instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/pronto_2_hop_8_names
 
-EXPERIMENT_NAME=arth-prompt-decompose-instruct-qwen3B-instruct-length-penalty
+EXPERIMENT_NAME=pronto-2-hop-8-names-qwen0.5B-instruct-lvl1
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=250
+MAX_PROMPT_LENGTH=256
 MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
@@ -22,8 +22,8 @@ ROLLOUT_TEMP=1.0 # default is 1.0
 ENTROPY_COEFF=0.001 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[length_penalty]'
-OVERSEER_STEPS_TILL_USE=20
+OVERSEER_TYPES='[pronto_illegal_strings_lvl_1]'
+OVERSEER_STEPS_TILL_USE=0
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
