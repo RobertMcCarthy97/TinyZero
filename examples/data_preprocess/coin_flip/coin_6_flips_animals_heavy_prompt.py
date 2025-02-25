@@ -130,8 +130,8 @@ There are many animals with fascinating heads and tails in the animal kingdom!
 <|im_start|>user
 Could you please write a paragraph about animals that have interesting heads or tails?<|im_end|>
 <|im_start|>assistant
-There are many animals with fascinating heads and tails in the animal kingdom!{prefill_string}
-<paragraph>"""
+<paragraph> There are many animals with fascinating heads and tails in the animal kingdom!{prefill_string}
+"""
 
         ground_truth = final_side
         
