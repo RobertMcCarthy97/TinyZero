@@ -68,4 +68,7 @@ python ./examples/data_preprocess/pronto/pronto_2_hop_8_names.py --local_dir dat
 python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coin_6_flips --n_datapoints 10000 --n_flips 6
 
 # 6 flips, animals, heavy prompt
-python ./examples/data_preprocess/coin_flip/coin_6_flips_animals_heavy_prompt.py --local_dir data/coin_6_flips_animals_prefill_4 --n_datapoints 10000 --n_flips 6 --prefill_n 4
+python ./examples/data_preprocess/coin_flip/coin_6_flips_animals_heavy_prompt_[BAD].py --local_dir data/coin_6_flips_animals_prefill_4_[BAD] --n_datapoints 10000 --n_flips 6 --prefill_n 4
+
+# 5 flips, animals
+python ./examples/data_preprocess/coin_flip/coin_flips_animals.py --local_dir data/coin_5_flips_animals --n_datapoints 10000 --n_flips 5

@@ -6,12 +6,12 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_animals_prefill_4
+DATA_DIR=$ROOT_DIR/TinyZero/data/coin_5_flips_animals
 
-EXPERIMENT_NAME=coin-6-flips-animals-qwen3B-instruct
+EXPERIMENT_NAME=coin-5-flips-animals-qwen3B-instruct
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=500
+MAX_PROMPT_LENGTH=400
 MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
