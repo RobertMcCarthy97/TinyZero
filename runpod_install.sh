@@ -44,6 +44,11 @@ python ./examples/data_preprocess/arth_prompt_replace_vague_lvl1_decompose.py --
 python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instruct
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
+#### Arth
+# DIY
+python ./examples/data_preprocess/arth_plus_surface/arth_instruct_diy.py --local_dir data/arth_instruct_diy
+
+
 ### SYCOPHANCY
 # Standard
 python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data/sycophancy_standard
