@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/arth_instruct_diy
 
-EXPERIMENT_NAME=carth-diy-qwen3B-instruct
+EXPERIMENT_NAME=arth-diy-qwen3B-instruct
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=400
