@@ -4,28 +4,26 @@ N_GPUS=2
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
 
-BASE_ACTOR=Qwen/Qwen2.5-7B-Instruct
-BASE_CRITIC=Qwen/Qwen2.5-7B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
+BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
+BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=arth-qwen7B-lvl1
+EXPERIMENT_NAME=coin-flip-decompose-qwen3B-lvl1-dense-entropy-0.005
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=312
-MAX_RESPONSE_LENGTH=512
-MICRO_BATCH_SIZE=4
-CRITIC_ENABLE_GRAD_CKPT=True
-VLLM_MEM_USAGE=0.3
-TOTAL_EPOCHS=50
+MAX_PROMPT_LENGTH=350
+MAX_RESPONSE_LENGTH=1024
+MICRO_BATCH_SIZE=8
+TOTAL_EPOCHS=500
 TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.01 # default is 0.001
+ENTROPY_COEFF=0.005 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense]'
-OVERSEER_STEPS_TILL_USE=10
+OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_1_dense]'
+OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
@@ -55,14 +53,13 @@ actor_rollout_ref.actor.ppo_mini_batch_size=128 \
 actor_rollout_ref.actor.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.tensor_model_parallel_size=$ROLLOUT_TP_SIZE \
-actor_rollout_ref.rollout.gpu_memory_utilization=$VLLM_MEM_USAGE \
+actor_rollout_ref.rollout.gpu_memory_utilization=0.4 \
 actor_rollout_ref.ref.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.temperature=$ROLLOUT_TEMP \
 actor_rollout_ref.actor.entropy_coeff=$ENTROPY_COEFF \
 critic.optim.lr=1e-5 \
 critic.model.path=$BASE_CRITIC \
 critic.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
-critic.model.enable_gradient_checkpointing=$CRITIC_ENABLE_GRAD_CKPT \
 algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
