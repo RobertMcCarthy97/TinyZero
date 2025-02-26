@@ -6,12 +6,12 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-7B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-7B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
 
-EXPERIMENT_NAME=arth-qwen7B-instruct-lvl1
+EXPERIMENT_NAME=arth-qwen7B-lvl1
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=350
+MAX_PROMPT_LENGTH=312
 MAX_RESPONSE_LENGTH=512
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
@@ -23,7 +23,7 @@ ENTROPY_COEFF=0.001 # default is 0.001
 
 USE_OVERSEER=True
 OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense]'
-OVERSEER_STEPS_TILL_USE=15
+OVERSEER_STEPS_TILL_USE=10
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64

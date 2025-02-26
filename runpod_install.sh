@@ -46,6 +46,8 @@ python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instr
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
 #### Arth
+# Instruct
+python ./examples/data_preprocess/arth_prompt_decompose_instruct.py --local_dir data/arth_prompt_decompose_instruct
 # DIY
 python ./examples/data_preprocess/arth_plus_surface/arth_instruct_diy.py --local_dir data/arth_instruct_diy
 
