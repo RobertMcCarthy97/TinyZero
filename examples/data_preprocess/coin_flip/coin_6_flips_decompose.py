@@ -40,13 +40,13 @@ if __name__ == "__main__":
             # Generate flip sequence
             previous = start
             flips = []
-            for _ in range(n_flips):
+            for i in range(n_flips):
                 if random.random() < 0.5:  # 50% chance of same side
                     current = previous
                     flips.append("\n- Same side as previous")
                 else:
                     current = 'Heads' if previous == 'Tails' else 'Tails'
-                    flips.append("\n- Different side to previous")
+                    flips.append(f"\nFlip {i+1}: Different side to previous")
                 previous = current
                 
             dataset.append({
