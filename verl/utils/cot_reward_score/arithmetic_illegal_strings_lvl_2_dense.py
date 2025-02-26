@@ -3,7 +3,8 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2, tokenizer=None):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None):
+
     illegal_strings_tier_1 = ["*", "+", "-", "="]
     illegal_strings_tier_2 = ["multiplied", "times", "plus", "minus", "equals"]
 
@@ -31,16 +32,15 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         # k controls how quickly the penalty approaches -score
         # k = 0.2  # Adjust this value to control the curve
         # penalty += -score * (1 - math.exp(-k * tier_1_violation_count))
-        raise NotImplementedError
         
-        print(f"Found {violation_count} illegal string occurrences")
+        penalty += -score * tier_1_violation_count
+        
+        print(f"Found {tier_1_violation_count} tier 1 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
     if tier_2_violation_count > 0:
-        # k = 0.2  # Adjust this value to control the curve
-        # penalty += -score * (1 - math.exp(-k * tier_2_violation_count))
+        penalty += -score * 0.75 * tier_2_violation_count
+        print(f"Found {tier_2_violation_count} tier 2 illegal string occurrences")
+        print(f"Penalty: {penalty}")
     
     return penalty
-    
-    print("No illegal strings found in solution")
-    return 0
