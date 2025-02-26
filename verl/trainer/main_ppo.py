@@ -46,7 +46,6 @@ from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_temporally_dense
-from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2_temporally_dense
 from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_2
 from verl.utils.cot_reward_score.rm_overseers import TwitterSentimentRM
@@ -60,14 +59,10 @@ def _select_CoT_rm_score_fn(reward_type):
         return length_reward.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1":
         return arithmetic_illegal_strings_lvl_1.compute_score
-    elif reward_type == "arth_illegal_strings_lvl_2":
-        return arithmetic_illegal_strings_lvl_2.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1_dense":
         return arithmetic_illegal_strings_lvl_1_dense.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1_temporally_dense":
         return arithmetic_illegal_strings_lvl_1_temporally_dense.compute_score
-    elif reward_type == "arth_illegal_strings_lvl_2_temporally_dense":
-        return arithmetic_illegal_strings_lvl_2_temporally_dense.compute_score
     elif reward_type == "pronto_illegal_strings_lvl_1":
         return pronto_illegal_strings_lvl_1.compute_score
     elif reward_type == "pronto_illegal_strings_lvl_2":

@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2, tokenizer=None):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None):
     illegal_strings = ["*", "+", "-", "="]
     
     if "Assistant:" in solution_str:
@@ -24,8 +24,9 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"\nsolution_str: {solution_str}")
     if violation_count > 0:
         # k controls how quickly the penalty approaches -score
-        k = 0.2  # Adjust this value to control the curve
-        penalty = -score * (1 - math.exp(-k * violation_count))
+        # k = 0.2  # Adjust this value to control the curve
+        # penalty = -score * (1 - math.exp(-k * violation_count))
+        penalty = -score * violation_count
         
         print(f"Found {violation_count} illegal string occurrences")
         print(f"Penalty: {penalty}")
