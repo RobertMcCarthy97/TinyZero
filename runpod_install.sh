@@ -41,6 +41,7 @@ python ./examples/data_preprocess/arth_prompt_replace_lvl2_decompose_example.py 
 
 python ./examples/data_preprocess/arth_prompt_replace_vague_lvl1_decompose.py --local_dir data/arth_prompt_replace_vague_lvl1_decompose
 
+# gsm8k instruct
 python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instruct
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
