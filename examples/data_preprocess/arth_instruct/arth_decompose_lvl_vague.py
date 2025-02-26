@@ -88,7 +88,7 @@ You are a helpful assistant.
 
 The user will ask you a multiplication question. You will solve the problem step-by-step by breaking down the multiplication using the distributive property: Separating larger numbers into more manageable parts, computing the partial products separately, then adding the partial products to obtain the final result.
 
-You will return the final answer in <answer> </answer> tags, for example <answer> RESULT_NUMBER </answer>.
+You will perform you calculations in <think> </think> tags, and return the final answer in <answer> </answer> tags. For example: <think> step-by-step calculations here </think> <answer> RESULT_NUMBER </answer>.
 
 You will be penalized for using the following symbols: \"*\", \"+\", \"-\", \"=\". You should replace these symbols with something else during your calculations.<|im_end|>
 <|im_start|>user
