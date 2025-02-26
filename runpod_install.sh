@@ -68,6 +68,8 @@ python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data
 ### Pronto
 # 2 hop 8 names
 python ./examples/data_preprocess/pronto/pronto_2_hop_8_names.py --local_dir data/pronto_2_hop_8_names
+# 2 hop 8 names lvl1 vague
+python ./examples/data_preprocess/pronto/pronto_2_hop_8_names_lvl1_vague.py --local_dir data/pronto_2_hop_8_names_lvl1_vague
 
 ### Coin Flip
 # 6 flips
