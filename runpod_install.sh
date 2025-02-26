@@ -33,8 +33,6 @@ python ./examples/data_preprocess/arth_prompt_replace_lvl1_decompose_example.py 
 python ./examples/data_preprocess/arth_prompt_replace_lvl1_decompose.py --local_dir data/arth_prompt_replace_lvl1_decompose
 python ./examples/data_preprocess/arth_super_simple_prompt_decompose_example.py --local_dir data/arth_super_simple_prompt_decompose_example
 
-python ./examples/data_preprocess/arth_instruct_story.py --local_dir data/arth_instruct_story
-
 python ./examples/data_preprocess/arth_direct_answer_instruct.py --local_dir data/arth_direct_answer_instruct
 
 python ./examples/data_preprocess/arth_prompt_replace_lvl2_decompose_example.py --local_dir data/arth_prompt_replace_lvl2_decompose_example
@@ -46,10 +44,15 @@ python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instr
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
 #### Arth
+# Decompose
+python ./examples/data_preprocess/arth_instruct/arth_decompose.py --local_dir data/arth_instruct_decompose
+# Decompose Lvl1 Vague
+python ./examples/data_preprocess/arth_instruct/arth_decompose_lvl_vague.py --local_dir data/arth_instruct_decompose_lvl1_vague
 # Instruct
-python ./examples/data_preprocess/arth_prompt_decompose_instruct.py --local_dir data/arth_prompt_decompose_instruct
 # DIY
 python ./examples/data_preprocess/arth_plus_surface/arth_instruct_diy.py --local_dir data/arth_instruct_diy
+# Story
+python ./examples/data_preprocess/arth_instruct/arth_story.py --local_dir data/arth_instruct_story
 
 
 ### SYCOPHANCY
