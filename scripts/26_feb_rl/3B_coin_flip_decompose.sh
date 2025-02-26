@@ -6,24 +6,24 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_prompt_decompose_instruct
+DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=arth-qwen3B-instruct-lvl1-standard-dense
+EXPERIMENT_NAME=coin-flip-decompose-qwen3B
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=312
-MAX_RESPONSE_LENGTH=512
+MAX_PROMPT_LENGTH=350
+MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
 TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.01 # default is 0.001
+ENTROPY_COEFF=0.001 # default is 0.001
 
-USE_OVERSEER=True
-OVERSEER_TYPES='[arth_illegal_strings_lvl_1_dense]'
-OVERSEER_STEPS_TILL_USE=20
+USE_OVERSEER=False
+OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_1_dense]'
+OVERSEER_STEPS_TILL_USE=15
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
