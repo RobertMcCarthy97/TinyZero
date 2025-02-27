@@ -17,7 +17,7 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 
 from verl import DataProto
 import torch
-from verl.utils.reward_score import gsm8k, math, multiply, countdown, sycophancy
+from verl.utils.reward_score import gsm8k, math, multiply, countdown, sycophancy, pronto, coin_flip
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 
@@ -32,6 +32,10 @@ def _select_rm_score_fn(data_source):
         return countdown.compute_score
     elif "sycophancy" in data_source:
         return sycophancy.compute_score
+    elif "pronto" in data_source:
+        return pronto.compute_score
+    elif "coin_flip" in data_source:
+        return coin_flip.compute_score
     else:
         raise NotImplementedError
 
@@ -42,7 +46,13 @@ from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_temporally_dense
-from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2_temporally_dense
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2_dense
+from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_3_dense
+from verl.utils.cot_reward_score import multiply_illegal_strings_lvl_3_dense
+from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_1
+from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_2
+from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_1_dense
+from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_2_dense
 from verl.utils.cot_reward_score.rm_overseers import TwitterSentimentRM
 
 def _select_CoT_rm_score_fn(reward_type):
@@ -54,14 +64,24 @@ def _select_CoT_rm_score_fn(reward_type):
         return length_reward.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1":
         return arithmetic_illegal_strings_lvl_1.compute_score
-    elif reward_type == "arth_illegal_strings_lvl_2":
-        return arithmetic_illegal_strings_lvl_2.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1_dense":
         return arithmetic_illegal_strings_lvl_1_dense.compute_score
     elif reward_type == "arth_illegal_strings_lvl_1_temporally_dense":
         return arithmetic_illegal_strings_lvl_1_temporally_dense.compute_score
-    elif reward_type == "arth_illegal_strings_lvl_2_temporally_dense":
-        return arithmetic_illegal_strings_lvl_2_temporally_dense.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_2_dense":
+        return arithmetic_illegal_strings_lvl_2_dense.compute_score
+    elif reward_type == "arth_illegal_strings_lvl_3_dense":
+        return arithmetic_illegal_strings_lvl_3_dense.compute_score
+    elif reward_type == "multiply_illegal_strings_lvl_3_dense":
+        return multiply_illegal_strings_lvl_3_dense.compute_score
+    elif reward_type == "pronto_illegal_strings_lvl_1":
+        return pronto_illegal_strings_lvl_1.compute_score
+    elif reward_type == "pronto_illegal_strings_lvl_2":
+        return pronto_illegal_strings_lvl_2.compute_score
+    elif reward_type == "coin_flip_illegal_strings_lvl_1_dense":
+        return coin_flip_illegal_strings_lvl_1_dense.compute_score
+    elif reward_type == "coin_flip_illegal_strings_lvl_2_dense":
+        return coin_flip_illegal_strings_lvl_2_dense.compute_score
     else:
         raise NotImplementedError
 
@@ -131,7 +151,7 @@ class RuleBasedOverseerManager():
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.reward_type = reward_type
 
-    def __call__(self, data: DataProto):
+    def __call__(self, data: DataProto, step: int):
         """We will expand this function gradually based on the available datasets"""
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
@@ -168,7 +188,7 @@ class RuleBasedOverseerManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer)
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step) # yucky, yucky
             
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):

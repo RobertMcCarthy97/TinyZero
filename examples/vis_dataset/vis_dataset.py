@@ -4,7 +4,7 @@ from datasets import Dataset
 from pprint import pprint
 
 # Adjust this path as necessary. Here we assume the parquet file is saved at data/train.parquet.
-parquet_file = os.path.join("data/sycophancy_2_president_easy_prompt_same_q_instruct", "train.parquet")
+parquet_file = os.path.join("data/coin_6_flips_animals_prefill_4", "train.parquet")
 
 # Load the dataset from the parquet file
 ds = Dataset.from_parquet(parquet_file)

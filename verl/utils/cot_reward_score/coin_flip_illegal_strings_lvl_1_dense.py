@@ -3,8 +3,8 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0):
-    illegal_strings = ["*", "+", "-", "="]
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0):
+    illegal_strings = ["heads"]
     
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
