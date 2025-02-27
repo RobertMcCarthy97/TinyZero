@@ -44,6 +44,8 @@ python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instr
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
 #### Arth
+# Standard instruct
+python ./examples/data_preprocess/arth_instruct/arth.py --local_dir data/arth_instruct
 # Decompose
 python ./examples/data_preprocess/arth_instruct/arth_decompose.py --local_dir data/arth_instruct_decompose
 # Decompose Lvl1 Vague
@@ -67,6 +69,8 @@ python ./examples/data_preprocess/sycophancy/sycophancy_core.py --local_dir data
 ### Pronto
 # 2 hop 8 names
 python ./examples/data_preprocess/pronto/pronto_2_hop_8_names.py --local_dir data/pronto_2_hop_8_names
+# 2 hop 8 names lvl1 vague
+python ./examples/data_preprocess/pronto/pronto_2_hop_8_names_lvl1_vague.py --local_dir data/pronto_2_hop_8_names_lvl1_vague
 
 ### Coin Flip
 # 6 flips

@@ -6,23 +6,23 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
+DATA_DIR=$ROOT_DIR/TinyZero/data/pronto_2_hop_8_names_lvl1_vague
 
-EXPERIMENT_NAME=coin-flip-decompose-qwen3B-lvl1-dense-entropy-0.01-penalty-0.15
+EXPERIMENT_NAME=pronto-2-hop-8-names-qwen3B-instruct-lvl1-vague
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=350
-MAX_RESPONSE_LENGTH=512
+MAX_PROMPT_LENGTH=256
+MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
-TOTAL_EPOCHS=500
-TEST_FREQ=25
+TOTAL_EPOCHS=50
+TEST_FREQ=20
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.01 # default is 0.001
+ENTROPY_COEFF=0.001 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_1_dense]'
+OVERSEER_TYPES='[pronto_illegal_strings_lvl_1]'
 OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False

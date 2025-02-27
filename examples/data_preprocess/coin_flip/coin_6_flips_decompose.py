@@ -70,14 +70,13 @@ You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process tracking the state of the coin here </think> <answer> Heads/Tails </answer>.<|im_end|>
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
 
 What side did the coin land on after the final flip?<|im_end|>
 <|im_start|>assistant
-Let me solve this step by step.
-<think>"""
+Let me solve this step by step."""
 
         ground_truth = final_side
         

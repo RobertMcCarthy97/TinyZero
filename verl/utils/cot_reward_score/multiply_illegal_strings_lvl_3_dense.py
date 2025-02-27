@@ -5,8 +5,9 @@ import math
 
 def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0):
 
-    illegal_strings_tier_1 = ["*", "+", "-", "="]
-    illegal_strings_tier_2 = ["multiplied", "times", "plus", "minus", "equals"]
+    illegal_strings_tier_1 = ["*"]
+    illegal_strings_tier_2 = ["multiplied", "times"]
+    illegal_strings_tier_3 = ["multiply", "by", "x", "and", "product"]
 
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
@@ -24,9 +25,12 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
                          for string in illegal_strings_tier_1)
     tier_2_violation_count = sum(solution_str.lower().count(string.lower()) 
                          for string in illegal_strings_tier_2)
+    tier_3_violation_count = sum(solution_str.lower().count(string.lower()) 
+                         for string in illegal_strings_tier_3)
     
     penalty = 0
 
+    print(f"\nstep: {step}")
     print(f"\nsolution_str: {solution_str}")
     if tier_1_violation_count > 0:
         # k controls how quickly the penalty approaches -score
@@ -38,9 +42,14 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         print(f"Found {tier_1_violation_count} tier 1 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
-    if tier_2_violation_count > 0:
+    if tier_2_violation_count > 0 and step > 50:
         penalty += -score * 0.75 * tier_2_violation_count
         print(f"Found {tier_2_violation_count} tier 2 illegal string occurrences")
+        print(f"Penalty: {penalty}")
+
+    if tier_3_violation_count > 0 and step > 100:
+        penalty += -score * 0.6 * tier_3_violation_count
+        print(f"Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
     return penalty
