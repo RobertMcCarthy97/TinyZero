@@ -47,8 +47,7 @@ python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k
 # Decompose
 python ./examples/data_preprocess/arth_instruct/arth_decompose.py --local_dir data/arth_instruct_decompose
 # Decompose Lvl1 Vague
-python ./examples/data_preprocess/arth_instruct/arth_decompose_lvl_vague.py --local_dir data/arth_instruct_decompose_lvl1_vague
-# Instruct
+python ./examples/data_preprocess/arth_instruct/arth_decompose_lvl1_vague.py --local_dir data/arth_instruct_decompose_lvl1_vague
 # DIY
 python ./examples/data_preprocess/arth_plus_surface/arth_instruct_diy.py --local_dir data/arth_instruct_diy
 # Story

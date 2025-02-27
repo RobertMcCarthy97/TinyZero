@@ -6,13 +6,13 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/arth_instruct_decompose
+DATA_DIR=$ROOT_DIR/TinyZero/data/arth_instruct_decompose_lvl1_vague
 
-EXPERIMENT_NAME=arth-qwen3B-instruct-lvl1-standard-dense
+EXPERIMENT_NAME=arth-qwen3B-instruct-lvl1-vague-temporally-dense
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=312
-MAX_RESPONSE_LENGTH=512
+MAX_PROMPT_LENGTH=350
+MAX_RESPONSE_LENGTH=712
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
 TEST_FREQ=25
@@ -22,7 +22,7 @@ ROLLOUT_TEMP=1.0 # default is 1.0
 ENTROPY_COEFF=0.01 # default is 0.001
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[arth_illegal_strings_lvl_1_dense]'
+OVERSEER_TYPES='[arth_illegal_strings_lvl_1_temporally_dense]'
 OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False
