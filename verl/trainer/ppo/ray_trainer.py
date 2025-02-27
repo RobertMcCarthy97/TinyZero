@@ -799,7 +799,13 @@ class RayPPOTrainer(object):
                 # metrics calcs
                 batch_size = batch.batch['attention_mask'].shape[0]
                 self.total_samples_seen += batch_size
-                metrics.update({"total_samples_seen": self.total_samples_seen, "batch_size": batch_size})
+                metrics.update({
+                    "data/total_samples_seen": self.total_samples_seen,
+                    "data/batch_size": batch_size,
+                    "data/epoch": epoch,
+                    "data/train_data_size": len(self.train_dataloader.dataset),
+                    "data/val_data_size": len(self.val_dataloader.dataset),
+                    })
 
                 # collect metrics
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
