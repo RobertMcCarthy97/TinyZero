@@ -20,18 +20,38 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         last_match = matches[-1]
         solution_str = solution_str[:last_match.start()]
 
-    # Count total violations
-    tier_1_violation_count = sum(solution_str.lower().count(string.lower()) 
-                         for string in illegal_strings_tier_1)
-    tier_2_violation_count = sum(solution_str.lower().count(string.lower()) 
-                         for string in illegal_strings_tier_2)
-    tier_3_violation_count = sum(solution_str.lower().count(string.lower()) 
-                         for string in illegal_strings_tier_3)
+    # # Count total violations
+    # tier_1_violation_count = sum(solution_str.lower().count(string.lower()) 
+    #                      for string in illegal_strings_tier_1)
+    # tier_2_violation_count = sum(solution_str.lower().count(string.lower()) 
+    #                      for string in illegal_strings_tier_2)
+    # tier_3_violation_count = sum(solution_str.lower().count(string.lower()) 
+    #                      for string in illegal_strings_tier_3)
+
+    # Count total violations and collect found illegal strings
+    tier_1_violations = []
+    for string in illegal_strings_tier_1:
+        for match in re.finditer(re.escape(string), solution_str, re.IGNORECASE):
+            tier_1_violations.append(match.group())
+    tier_1_violation_count = len(tier_1_violations)
+    
+    tier_2_violations = []
+    for string in illegal_strings_tier_2:
+        for match in re.finditer(re.escape(string), solution_str, re.IGNORECASE):
+            tier_2_violations.append(match.group())
+    tier_2_violation_count = len(tier_2_violations)
+    
+    tier_3_violations = []
+    for string in illegal_strings_tier_3:
+        for match in re.finditer(re.escape(string), solution_str, re.IGNORECASE):
+            tier_3_violations.append(match.group())
+    tier_3_violation_count = len(tier_3_violations)
     
     penalty = 0
 
-    print(f"\nstep: {step}")
-    print(f"\nsolution_str: {solution_str}")
+    print(f"\n\n############ ARITHMETIC ILLEGAL STRINGS LVL 3 DENSE ############")
+    print(f"\nsolution_str:\n{solution_str}")
+    print(f"\n### PENALTIES ###")
     if tier_1_violation_count > 0:
         # k controls how quickly the penalty approaches -score
         # k = 0.2  # Adjust this value to control the curve
@@ -39,17 +59,22 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         
         penalty += -score * tier_1_violation_count
         
-        print(f"Found {tier_1_violation_count} tier 1 illegal string occurrences")
+        print(f"\n## Found {tier_1_violation_count} tier 1 illegal string occurrences")
+        print(f"Illegal strings: {tier_1_violations}")
         print(f"Penalty: {penalty}")
     
     if tier_2_violation_count > 0:
         penalty += -score * 0.75 * tier_2_violation_count
-        print(f"Found {tier_2_violation_count} tier 2 illegal string occurrences")
+        print(f"\n## Found {tier_2_violation_count} tier 2 illegal string occurrences")
+        print(f"Illegal strings: {tier_2_violations}")
         print(f"Penalty: {penalty}")
 
     if tier_3_violation_count > 0 and step >= 150:
         penalty += -score * 0.6 * tier_3_violation_count
-        print(f"Found {tier_3_violation_count} tier 3 illegal string occurrences")
+        print(f"\n## Found {tier_3_violation_count} tier 3 illegal string occurrences")
+        print(f"Illegal strings: {tier_3_violations}")
         print(f"Penalty: {penalty}")
+    
+    print(f"\n####### END OF ARITHMETIC ILLEGAL STRINGS LVL 3 DENSE #######")
     
     return penalty
