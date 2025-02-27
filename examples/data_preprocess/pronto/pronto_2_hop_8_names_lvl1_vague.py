@@ -27,7 +27,7 @@ if __name__ == "__main__":
         prefix = f"""<|im_start|>system
 You are a helpful assistant.
 
-You first think about the reasoning process in the mind and then provide the user with the answer. You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> TRUE/FALSE </answer>.
+You first think about the reasoning process in the mind and then provide the user with the answer. You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> True/False </answer>.
 
 You will be penalized for using the following strings: \"tumpus\", \"tumpuses\". You should replace these strings with something else during your reasoning process.<|im_end|>
 

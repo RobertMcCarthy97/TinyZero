@@ -1,7 +1,7 @@
 import re
 import random
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.8, max_length=80, tokenizer=None):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.8, max_length=80, tokenizer=None, step=0):
 
     # Remove everything before the first "Assistant:"
     if "Assistant:" in solution_str:

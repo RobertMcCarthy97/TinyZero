@@ -148,7 +148,7 @@ class RuleBasedOverseerManager():
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.reward_type = reward_type
 
-    def __call__(self, data: DataProto):
+    def __call__(self, data: DataProto, step: int):
         """We will expand this function gradually based on the available datasets"""
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
@@ -185,7 +185,7 @@ class RuleBasedOverseerManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer)
+            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step) # yucky, yucky
             
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):

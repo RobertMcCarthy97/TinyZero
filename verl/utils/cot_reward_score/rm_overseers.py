@@ -22,6 +22,8 @@ class TwitterSentimentRM():
         num_params = count_parameters(self.sentiment_task.model)
         print(f"\nSentiment model, number of parameters: {num_params:,}")
 
+        raise NotImplementedError("This RM is not implemented")
+
     def compute_reward(self, response_strs: List[str], batch_size=16, scale=0.2) -> torch.Tensor:
         # Process texts in smaller batches to handle varying lengths
         all_scores = []

@@ -27,7 +27,7 @@ if __name__ == "__main__":
         prefix = f"""<|im_start|>system
 You are a helpful assistant.
 
-You first think about the reasoning process in the mind and then provide the user with the answer. You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> TRUE/FALSE </answer>.<|im_end|>
+You first think about the reasoning process in the mind and then provide the user with the answer. You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> True/False </answer>.<|im_end|>
 <|im_start|>user
 {question}.\n\nPlease answer the following; {query}<|im_end|>
 <|im_start|>assistant
