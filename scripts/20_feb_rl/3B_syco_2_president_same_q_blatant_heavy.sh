@@ -11,7 +11,7 @@ DATA_DIR=$ROOT_DIR/TinyZero/data/sycophancy_2_president_blatant_heavy_example_sa
 EXPERIMENT_NAME=syco-2-president-blatant-heavy-example-same-q-qwen3B-instruct
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
-MAX_PROMPT_LENGTH=400
+MAX_PROMPT_LENGTH=512
 MAX_RESPONSE_LENGTH=1024
 MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=50
