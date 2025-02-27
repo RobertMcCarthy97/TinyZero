@@ -43,17 +43,17 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         # penalty = -score * (1 - math.exp(-k * violation_count))
         penalty += -score * tier_1_violation_count
         
-        print(f"Found {tier_1_violation_count} illegal string occurrences")
+        print(f"Found {tier_1_violation_count} tier 1 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
     if tier_2_violation_count > 0:
         penalty += -score * 0.8 * tier_2_violation_count
-        print(f"Found {tier_2_violation_count} illegal string occurrences")
+        print(f"Found {tier_2_violation_count} tier 2 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
     if tier_3_violation_count > 0:
         penalty += -score * 0.6 * tier_3_violation_count
-        print(f"Found {tier_3_violation_count} illegal string occurrences")
+        print(f"Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
     return penalty

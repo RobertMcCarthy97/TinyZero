@@ -44,6 +44,8 @@ python ./examples/data_preprocess/gsm8k_instruct.py --local_dir data/gsm8k_instr
 python ./examples/data_preprocess/gsm8k_instruct_moods.py --local_dir data/gsm8k_instruct_moods
 
 #### Arth
+# Standard instruct
+python ./examples/data_preprocess/arth_instruct/arth.py --local_dir data/arth_instruct
 # Decompose
 python ./examples/data_preprocess/arth_instruct/arth_decompose.py --local_dir data/arth_instruct_decompose
 # Decompose Lvl1 Vague
