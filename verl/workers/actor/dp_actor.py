@@ -253,6 +253,10 @@ class DataParallelPPOActor(BasePPOActor):
                 # compute entropy loss from entropy
                 entropy_loss = verl_F.masked_mean(entropy, response_mask)
 
+                entropy_loss_pre_clamp = entropy_loss.clone()
+                if self.config.use_entropy_clamp:
+                    entropy_loss = torch.clamp(entropy_loss, min=0.0, max=self.config.entropy_clamp_max)
+
                 # compute policy loss
                 policy_loss = pg_loss - entropy_loss * entropy_coeff
 
@@ -273,6 +277,7 @@ class DataParallelPPOActor(BasePPOActor):
 
                 data = {
                     'actor/entropy_loss': entropy_loss.detach().item(),
+                    'actor/entropy_loss_pre_clamp': entropy_loss_pre_clamp.detach().item(),
                     'actor/pg_loss': pg_loss.detach().item(),
                     'actor/pg_clipfrac': pg_clipfrac.detach().item(),
                     'actor/ppo_kl': ppo_kl.detach().item(),
