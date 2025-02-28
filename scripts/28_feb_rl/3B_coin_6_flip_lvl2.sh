@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=coin-6-flip-decompose-qwen3B-entropy-0.001
+EXPERIMENT_NAME=coin-6-flip-decompose-qwen3B-entropy-0.02-clamp-0.6
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -19,11 +19,13 @@ TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.01 # default is 0.001
+ENTROPY_COEFF=0.02 # default is 0.001
+USE_ENTROPY_CLAMP=True
+ENTROPY_CLAMP_MAX=0.6
 
 USE_OVERSEER=True
 OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_2_dense]'
-OVERSEER_STEPS_TILL_USE=15
+OVERSEER_STEPS_TILL_USE=20
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
@@ -57,6 +59,8 @@ actor_rollout_ref.rollout.gpu_memory_utilization=0.4 \
 actor_rollout_ref.ref.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.temperature=$ROLLOUT_TEMP \
 actor_rollout_ref.actor.entropy_coeff=$ENTROPY_COEFF \
+actor_rollout_ref.actor.use_entropy_clamp=$USE_ENTROPY_CLAMP \
+actor_rollout_ref.actor.entropy_clamp_max=$ENTROPY_CLAMP_MAX \
 critic.optim.lr=1e-5 \
 critic.model.path=$BASE_CRITIC \
 critic.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
