@@ -79,6 +79,12 @@ python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coi
 python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coin_7_flips --n_datapoints 10000 --n_flips 7
 # 6 flips decompose
 python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_6_flips_decompose --n_datapoints 10000 --n_flips 6
+# 6 flips decompose vague reason first
+python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_6_flips_decompose_vague_reason_first --n_datapoints 10000 --n_flips 6 --prompt_type vague_reason_first
+# 6 flips decompose vague
+python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_6_flips_decompose_vague --n_datapoints 10000 --n_flips 6 --prompt_type vague
+# 6 flips decompose replace
+python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_6_flips_decompose_replace --n_datapoints 10000 --n_flips 6 --prompt_type replace
 # 7 flips decompose
 python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_7_flips_decompose --n_datapoints 10000 --n_flips 7
 # 6 flips, animals, heavy prompt
