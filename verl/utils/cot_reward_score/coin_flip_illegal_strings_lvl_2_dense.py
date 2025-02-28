@@ -5,10 +5,6 @@ import math
 
 def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
 
-    # Print kick_in_steps to check if items are integers
-    print(f"\nkick_in_steps: {kick_in_steps}")
-    print(f"Types: {[type(step) for step in kick_in_steps]}")
-
     assert len(kick_in_steps) == 3
 
     illegal_strings_tier_1 = ["Heads"]

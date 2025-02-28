@@ -200,7 +200,22 @@ class DataParallelPPOActor(BasePPOActor):
 
         return log_probs
 
+    def calc_entropy_schedule(self, step: int) -> float:
+        if self.config.use_entropy_schedule:
+            start_value = self.config.entropy_schedule_start_value
+            end_value = self.config.entropy_coeff
+            schedule_steps = self.config.entropy_schedule_steps
+            assert schedule_steps > 0
+            assert start_value < end_value
+
+            current_value = start_value + (end_value - start_value) * step / schedule_steps
+            current_value = torch.clamp(current_value, min=0.0, max=self.config.entropy_clamp_max)
+            return current_value
+        else:
+            return self.config.entropy_coeff
+
     def update_policy(self, data: DataProto):
+
         # make sure we are in training mode
         self.actor_module.train()
 
@@ -257,6 +272,9 @@ class DataParallelPPOActor(BasePPOActor):
                 if self.config.use_entropy_clamp:
                     entropy_loss = torch.clamp(entropy_loss, min=0.0, max=self.config.entropy_clamp_max)
 
+                global_steps = data.meta_info['global_steps']
+                entropy_coeff = self.calc_entropy_schedule(step=global_steps)
+
                 # compute policy loss
                 policy_loss = pg_loss - entropy_loss * entropy_coeff
 
@@ -281,6 +299,8 @@ class DataParallelPPOActor(BasePPOActor):
                     'actor/pg_loss': pg_loss.detach().item(),
                     'actor/pg_clipfrac': pg_clipfrac.detach().item(),
                     'actor/ppo_kl': ppo_kl.detach().item(),
+                    'actor/entropy_coeff': entropy_coeff,
+                    'actor/global_steps': global_steps,
                 }
                 append_to_dict(metrics, data)
 

@@ -27,8 +27,11 @@ actor_rollout_ref:
     grad_clip: 1.0
     clip_ratio: 0.2
     entropy_coeff: 0.001
-    use_entropy_clamp: False
-    entropy_clamp_max: 10.0
+    use_entropy_coeff_schedule: False
+    entropy_coeff_schedule_start_value: 0.0001
+    entropy_coeff_schedule_steps: 50
+    use_entropy_loss_clamp: False
+    entropy_loss_clamp_max: 10.0
     use_kl_loss: False # True for GRPO
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo
