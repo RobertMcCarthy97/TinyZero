@@ -6,9 +6,9 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/coin_7_flips_decompose
+DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=coin-7-flip-decompose-qwen3B-entropy-0.015
+EXPERIMENT_NAME=coin-6-flip-decompose-qwen3B-entropy-0.01
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -19,7 +19,7 @@ TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
-ENTROPY_COEFF=0.015 # default is 0.001
+ENTROPY_COEFF=0.01 # default is 0.001
 
 USE_OVERSEER=False
 OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_2_dense]'
