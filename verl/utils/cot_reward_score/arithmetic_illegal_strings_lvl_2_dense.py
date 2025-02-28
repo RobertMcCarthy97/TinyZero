@@ -3,7 +3,10 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
+
+    if step < kick_in_steps[0]:
+        return 0
 
     illegal_strings_tier_1 = ["*", "+", "-", "="]
     illegal_strings_tier_2 = ["multiplied", "times", "plus", "minus", "equals"]

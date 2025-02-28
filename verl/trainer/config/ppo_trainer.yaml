@@ -170,5 +170,6 @@ trainer:
 overseer:
   use: False
   types:
-    - "sure_string"
-  steps_till_use: 0
+    - '[sure_string]'
+  penalty_magnitude: 0.05
+  kick_in_steps: [20, 30, 40, 50]

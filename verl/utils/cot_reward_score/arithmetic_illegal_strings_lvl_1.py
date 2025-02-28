@@ -1,8 +1,11 @@
 import re
 import random
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2, tokenizer=None, step=0):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.2, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
     
+    if step < kick_in_steps[0]:
+        return 0
+
     illegal_strings = ["*", "+", "-", "="] # No "/",  as is in </think>
     
     # Remove everything before the first "Assistant:"

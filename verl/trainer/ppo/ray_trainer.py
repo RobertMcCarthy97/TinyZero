@@ -656,7 +656,7 @@ class RayPPOTrainer(object):
         metrics['reward/mean_task_reward'] = torch.mean(task_reward_tensor.sum(-1)).detach().item()
 
         # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
-        if self.overseer_reward_fns is not None and self.global_steps >= self.config.overseer.steps_till_use:
+        if self.overseer_reward_fns is not None:
             overseer_rwd_tensor_dict = {}
             for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
                 overseer_reward_tensor = overseer_reward_fn(batch, step=self.global_steps)

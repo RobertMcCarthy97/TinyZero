@@ -25,7 +25,8 @@ ENTROPY_CLAMP_MAX=0.6
 
 USE_OVERSEER=True
 OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_2_dense]'
-OVERSEER_STEPS_TILL_USE=20
+OVERSEER_PENALTY_MAGNITUDE=0.05
+OVERSEER_KICK_IN_STEPS='[20,30,40]'
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
@@ -67,7 +68,8 @@ critic.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
 algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
-overseer.steps_till_use=$OVERSEER_STEPS_TILL_USE \
+overseer.penalty_magnitude=$OVERSEER_PENALTY_MAGNITUDE \
+overseer.kick_in_steps=$OVERSEER_KICK_IN_STEPS \
 reward_model.enable=$RM_ENABLE \
 reward_model.strategy=fsdp \
 reward_model.model.input_tokenizer=$BASE_ACTOR \

@@ -3,7 +3,14 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
+
+    # Print kick_in_steps to check if items are integers
+    print(f"\nkick_in_steps: {kick_in_steps}")
+    print(f"Types: {[type(step) for step in kick_in_steps]}")
+
+    assert len(kick_in_steps) == 3
+
     illegal_strings_tier_1 = ["Heads"]
     illegal_strings_tier_2 = ["Head", "(H)", "\"H\"", "\'H\'"]
     illegal_strings_tier_3 = ["H"]
@@ -57,7 +64,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"\n### PENALTIES ###")
     penalty = 0
 
-    if tier_1_violation_count > 0:
+    if tier_1_violation_count > 0 and step > kick_in_steps[0]:
         # k controls how quickly the penalty approaches -score
         # k = 0.2  # Adjust this value to control the curve
         # penalty = -score * (1 - math.exp(-k * violation_count))
@@ -67,13 +74,13 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         print(f"Illegal strings: {tier_1_violations}")
         print(f"Penalty: {penalty}")
     
-    if tier_2_violation_count > 0 and step > 30:
+    if tier_2_violation_count > 0 and step > kick_in_steps[1]:
         penalty += -score * 0.8 * tier_2_violation_count
         print(f"\n## Found {tier_2_violation_count} tier 2 illegal string occurrences")
         print(f"Illegal strings: {tier_2_violations}")
         print(f"Penalty: {penalty}")
     
-    if tier_3_violation_count > 0 and step > 40:
+    if tier_3_violation_count > 0 and step > kick_in_steps[2]:
         penalty += -score * 0.6 * tier_3_violation_count
         print(f"\n## Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Illegal strings: {tier_3_violations}")
