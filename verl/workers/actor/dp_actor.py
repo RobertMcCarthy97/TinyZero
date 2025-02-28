@@ -200,21 +200,30 @@ class DataParallelPPOActor(BasePPOActor):
 
         return log_probs
 
-    def calc_entropy_schedule(self, step: int) -> float:
-        if self.config.use_entropy_schedule:
-            start_value = self.config.entropy_schedule_start_value
+    def calc_entropy_coeff_schedule(self, step: int, power: float = 3.0) -> float:
+        if self.config.use_entropy_coeff_schedule:
+            start_value = self.config.entropy_coeff_schedule_start_value
             end_value = self.config.entropy_coeff
-            schedule_steps = self.config.entropy_schedule_steps
+            schedule_steps = self.config.entropy_coeff_schedule_steps
             assert schedule_steps > 0
             assert start_value < end_value
 
-            current_value = start_value + (end_value - start_value) * step / schedule_steps
-            current_value = torch.clamp(current_value, min=0.0, max=self.config.entropy_clamp_max)
+            # Calculate normalized progress (0.0 to 1.0)
+            progress = min(1.0, step / schedule_steps)
+            
+            # Apply power function to create logarithmic-like curve
+            # Higher power = more time at lower values
+            adjusted_progress = progress ** power
+            
+            current_value = start_value + ((end_value - start_value) * adjusted_progress)
+            current_value = max(0.0, min(current_value, end_value))
             return current_value
         else:
             return self.config.entropy_coeff
 
     def update_policy(self, data: DataProto):
+
+        global_steps = data.meta_info['global_steps']
 
         # make sure we are in training mode
         self.actor_module.train()
@@ -269,11 +278,10 @@ class DataParallelPPOActor(BasePPOActor):
                 entropy_loss = verl_F.masked_mean(entropy, response_mask)
 
                 entropy_loss_pre_clamp = entropy_loss.clone()
-                if self.config.use_entropy_clamp:
-                    entropy_loss = torch.clamp(entropy_loss, min=0.0, max=self.config.entropy_clamp_max)
+                if self.config.use_entropy_loss_clamp:
+                    entropy_loss = torch.clamp(entropy_loss, min=0.0, max=self.config.entropy_loss_clamp_max)
 
-                global_steps = data.meta_info['global_steps']
-                entropy_coeff = self.calc_entropy_schedule(step=global_steps)
+                entropy_coeff = self.calc_entropy_coeff_schedule(step=global_steps)
 
                 # compute policy loss
                 policy_loss = pg_loss - entropy_loss * entropy_coeff

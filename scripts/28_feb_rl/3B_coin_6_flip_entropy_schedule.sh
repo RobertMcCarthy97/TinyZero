@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=coin-6-flip-decompose-qwen3B-entropy-schedule
+EXPERIMENT_NAME=coin-6-flip-entropy-schedule_to_0.1-clamp-2.0
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -23,10 +23,10 @@ ROLLOUT_TEMP=1.0 # default is 1.0
 ENTROPY_COEFF=0.1 # default is 0.001
 USE_ENTROPY_COEFF_SCHEDULE=True
 ENTROPY_COEFF_SCHEDULE_START_VALUE=0.0001
-ENTROPY_COEFF_SCHEDULE_STEPS=5
+ENTROPY_COEFF_SCHEDULE_STEPS=50
 
 USE_ENTROPY_LOSS_CLAMP=True
-ENTROPY_LOSS_CLAMP_MAX=0.8
+ENTROPY_LOSS_CLAMP_MAX=2.0
 
 USE_OVERSEER=False
 OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_2_dense]'
@@ -66,7 +66,7 @@ actor_rollout_ref.ref.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.temperature=$ROLLOUT_TEMP \
 actor_rollout_ref.actor.entropy_coeff=$ENTROPY_COEFF \
 actor_rollout_ref.actor.use_entropy_loss_clamp=$USE_ENTROPY_LOSS_CLAMP \
-actor_rollout_ref.actor.entropy_loss_clamp_max=$ENTROPY_CLAMP_MAX \
+actor_rollout_ref.actor.entropy_loss_clamp_max=$ENTROPY_LOSS_CLAMP_MAX \
 actor_rollout_ref.actor.use_entropy_coeff_schedule=$USE_ENTROPY_COEFF_SCHEDULE \
 actor_rollout_ref.actor.entropy_coeff_schedule_start_value=$ENTROPY_COEFF_SCHEDULE_START_VALUE \
 actor_rollout_ref.actor.entropy_coeff_schedule_steps=$ENTROPY_COEFF_SCHEDULE_STEPS \
@@ -76,7 +76,8 @@ critic.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
 algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
-overseer.steps_till_use=$OVERSEER_STEPS_TILL_USE \
+overseer.penalty_magnitude=$OVERSEER_PENALTY_MAGNITUDE \
+overseer.kick_in_steps=$OVERSEER_KICK_IN_STEPS \
 reward_model.enable=$RM_ENABLE \
 reward_model.strategy=fsdp \
 reward_model.model.input_tokenizer=$BASE_ACTOR \
