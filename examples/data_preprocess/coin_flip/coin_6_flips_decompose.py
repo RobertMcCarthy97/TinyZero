@@ -14,10 +14,12 @@ if __name__ == "__main__":
     parser.add_argument('--hdfs_dir', default=None)
     parser.add_argument('--n_datapoints', type=int, default=10000)
     parser.add_argument('--n_flips', type=int, default=6)
+    parser.add_argument('--prompt_type', type=str, default='standard')
     args = parser.parse_args()
 
     N_FLIPS = args.n_flips
     N_DATAPOINTS = args.n_datapoints
+    PROMPT_TYPE = args.prompt_type
 
     def create_dataset(n_datapoints, n_flips):
         """
@@ -65,7 +67,8 @@ if __name__ == "__main__":
         flips = data['flips']
         final_side = data['final']
 
-        prefix = f"""<|im_start|>system
+        if PROMPT_TYPE == 'standard':
+            prefix = f"""<|im_start|>system
 You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
@@ -77,6 +80,57 @@ The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of t
 What side did the coin land on after the final flip?<|im_end|>
 <|im_start|>assistant
 Let me solve this step by step."""
+        
+        elif PROMPT_TYPE == 'vague':
+            prefix = f"""<|im_start|>system
+You are a helpful assistant.
+
+The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
+
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.
+
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another unrelated word.
+<|im_end|>
+<|im_start|>user
+The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
+
+What side did the coin land on after the final flip?<|im_end|>
+<|im_start|>assistant
+Let me solve this step by step, while replacing \"Heads\" with another unrelated word."""
+
+        elif PROMPT_TYPE == 'vague_reason_first':
+            prefix = f"""<|im_start|>system
+You are a helpful assistant.
+
+The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
+
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.
+
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another word. Before you begin solving the problem, you should decide what word to replace \"Heads\" with.<|im_end|>
+<|im_start|>user
+The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
+
+What side did the coin land on after the final flip?<|im_end|>
+<|im_start|>assistant"""
+
+        elif PROMPT_TYPE == 'replace':
+            prefix = f"""<|im_start|>system
+You are a helpful assistant.
+
+The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
+
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"A\".
+
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
+<|im_start|>user
+The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
+
+What side did the coin land on after the final flip?<|im_end|>
+<|im_start|>assistant
+Let me solve this step by step."""
+            
+        else:
+            raise ValueError(f"Invalid prompt type: {PROMPT_TYPE}")
 
         ground_truth = final_side
         
