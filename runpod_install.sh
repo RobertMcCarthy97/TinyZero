@@ -75,8 +75,12 @@ python ./examples/data_preprocess/pronto/pronto_2_hop_8_names_lvl1_vague.py --lo
 ### Coin Flip
 # 6 flips
 python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coin_6_flips --n_datapoints 10000 --n_flips 6
+# 7 flips
+python ./examples/data_preprocess/coin_flip/coin_6_flips.py --local_dir data/coin_7_flips --n_datapoints 10000 --n_flips 7
 # 6 flips decompose
 python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_6_flips_decompose --n_datapoints 10000 --n_flips 6
+# 7 flips decompose
+python ./examples/data_preprocess/coin_flip/coin_6_flips_decompose.py --local_dir data/coin_7_flips_decompose --n_datapoints 10000 --n_flips 7
 # 6 flips, animals, heavy prompt
 python ./examples/data_preprocess/coin_flip/coin_6_flips_animals_heavy_prompt_[BAD].py --local_dir data/coin_6_flips_animals_prefill_4_[BAD] --n_datapoints 10000 --n_flips 6 --prefill_n 4
 # 5 flips, animals

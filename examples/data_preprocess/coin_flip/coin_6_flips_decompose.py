@@ -12,8 +12,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--local_dir', default='./coin_6_flips')
     parser.add_argument('--hdfs_dir', default=None)
-    parser.add_argument('--n_datapoints', default=10000)
-    parser.add_argument('--n_flips', default=6)
+    parser.add_argument('--n_datapoints', type=int, default=10000)
+    parser.add_argument('--n_flips', type=int, default=6)
     args = parser.parse_args()
 
     N_FLIPS = args.n_flips
@@ -43,10 +43,10 @@ if __name__ == "__main__":
             for i in range(n_flips):
                 if random.random() < 0.5:  # 50% chance of same side
                     current = previous
-                    flips.append("\n- Same side as previous")
+                    flips.append(f"\n- Flip {i+1}: Same side as previous")
                 else:
                     current = 'Heads' if previous == 'Tails' else 'Tails'
-                    flips.append(f"\nFlip {i+1}: Different side to previous")
+                    flips.append(f"\n- Flip {i+1}: Different side to previous")
                 previous = current
                 
             dataset.append({
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         
         return dataset
 
-    raw_dataset = create_dataset(n_datapoints=10000, n_flips=6)
+    raw_dataset = create_dataset(n_datapoints=N_DATAPOINTS, n_flips=N_FLIPS)
 
     dataset = []
     for data in raw_dataset:
