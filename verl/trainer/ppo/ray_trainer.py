@@ -625,11 +625,29 @@ class RayPPOTrainer(object):
                                                     prefix=logging_prefix)
         metrics.update(global_balance_stats)
 
+    def _compute_overseer_reward_schedule_coeff(self, step: int):
+        if self.config.overseer.use_schedule:
+
+            if step < self.config.overseer.schedule_start_step:
+                return 0.0
+            elif step > self.config.overseer.schedule_end_step:
+                return 1.0
+
+            schedule_start_step = self.config.overseer.schedule_start_step
+            schedule_end_step = self.config.overseer.schedule_end_step
+            schedule_steps = schedule_end_step - schedule_start_step
+            coeff = (step - schedule_start_step) / schedule_steps
+            return coeff
+        
+        else:
+            return 1.0
+
     def _compute_rewards(self, batch: DataProto):
         metrics = {}
         reward_tensors = {}
         if self.use_rm:
             print("\n\nUSING RM\n\n")
+            assert not self.config.overseer.use_schedule, "Overseer reward schedule is not supported with RM yet"
             # we first compute reward model score
             rm_batch = self.rm_wg.compute_rm_score(batch)
             rm_reward_tensor = rm_batch.batch['rm_scores']
@@ -659,16 +677,25 @@ class RayPPOTrainer(object):
         if self.overseer_reward_fns is not None:
             overseer_rwd_tensor_dict = {}
             for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
-                overseer_reward_tensor = overseer_reward_fn(batch, step=self.global_steps)
-                assert overseer_reward_tensor.shape == batch.batch['token_level_scores'].shape
-                batch.batch['token_level_scores'] += overseer_reward_tensor.clone()
-                # TODO: not properly verified
+                # Compute the reward
+                overseer_reward_tensor_pre_schedule = overseer_reward_fn(batch, step=self.global_steps)
+                assert overseer_reward_tensor_pre_schedule.shape == batch.batch['token_level_scores'].shape
 
-                # Add overseer reward metric
-                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor.sum(-1)).detach().item()
-                overseer_rwd_tensor_dict[reward_type] = overseer_reward_tensor
+                # Schedule the reward
+                schedule_coeff = self._compute_overseer_reward_schedule_coeff(self.global_steps)
+                overseer_reward_tensor_scheduled = overseer_reward_tensor_pre_schedule * schedule_coeff
+
+                # Add to overall rewards
+                batch.batch['token_level_scores'] += overseer_reward_tensor_scheduled.clone()
+
+                # Log metrics
+                metrics[f'reward/mean_overseer_reward/{reward_type}_pre_schedule'] = torch.mean(overseer_reward_tensor_pre_schedule.sum(-1)).detach().item()
+                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
+                metrics[f'reward/mean_overseer_reward/{reward_type}_schedule_coeff'] = schedule_coeff
+                overseer_rwd_tensor_dict[reward_type + '_pre_schedule'] = overseer_reward_tensor_pre_schedule
+                overseer_rwd_tensor_dict[reward_type + '_scheduled'] = overseer_reward_tensor_scheduled
         else:
-            overseer_rwd_tensor_dict = {"dummy overseer reward": torch.zeros_like(task_reward_tensor)}
+            overseer_rwd_tensor_dict = {"dummy_overseer_reward": torch.zeros_like(task_reward_tensor)}
 
 
         # compute rewards. apply_kl_penalty if available
