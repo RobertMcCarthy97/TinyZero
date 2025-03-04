@@ -713,6 +713,38 @@ class RayPPOTrainer(object):
 
         return batch, metrics, reward_tensors, rm_prompt_with_chat_template
 
+    def _insert_valid_trajectories(self, batch: DataProto):
+
+        N_to_replace = 10
+
+        # load in list of promtps and response strings
+        prompts, responses = load_valid_trajectores()
+
+        # Tokenize the prompts and responses
+        tokenized_prompts = self.tokenizer.batch_encode_plus(prompts, padding=True, truncation=True, max_length=self.config.actor_rollout_ref.actor.max_prompt_length)
+        tokenized_responses = self.tokenizer.batch_encode_plus(responses, padding=True, truncation=True, max_length=self.config.actor_rollout_ref.actor.max_response_length)
+
+        # Get the attention masks
+        attention_masks = [[1] * len(tokenized_prompt) + [0] * (self.config.actor_rollout_ref.actor.max_response_length - len(tokenized_prompt)) for tokenized_prompt in tokenized_prompts]
+        
+
+        # Replace the responses in the batch
+        for i in range(N_to_replace):
+            # Get the index of the prompt to replace
+            index_to_replace = np.random.randint(0, len(batch.batch['prompts']))
+
+            # Check lengths of new match original
+            assert len(tokenized_prompts[i]) == len(batch.batch['prompts'][index_to_replace])
+            assert len(tokenized_responses[i]) == len(batch.batch['responses'][index_to_replace])
+            assert len(attention_masks[i]) == len(batch.batch['attention_mask'][index_to_replace])
+
+            # Replace the response
+            batch.batch['prompts'][index_to_replace] = prompts[i]
+            batch.batch['responses'][index_to_replace] = responses[i]
+            batch.batch['attention_mask'][index_to_replace] = attention_masks[i]
+
+        return batch
+
 
     def fit(self):
         """
@@ -772,6 +804,17 @@ class RayPPOTrainer(object):
 
                     # compute global_valid tokens
                     batch.meta_info['global_token_num'] = torch.sum(batch.batch['attention_mask'], dim=-1).tolist()
+
+                    # Do a bunch of prints to understand what the batch contains
+                    print(f"\ngen_batch_output keys: {gen_batch_output.keys()}")
+                    print(f'\nbatch.batch keys: {batch.batch.keys()}')
+                    print(f'\nbatch.non_tensor_batch keys: {batch.non_tensor_batch.keys()}')
+                    print(f'\nbatch.meta_info keys: {batch.meta_info.keys()}')
+                    # Print the first element of each key in batch
+                    print(f'\nbatch.batch[0]: {batch.batch[0]}')
+                    print(f'\nbatch.non_tensor_batch[0]: {batch.non_tensor_batch[0]}')
+                    print(f'\nbatch.meta_info[0]: {batch.meta_info[0]}')
+                    assert False
 
                     # add global_steps to batch
                     batch.meta_info['global_steps'] = self.global_steps
