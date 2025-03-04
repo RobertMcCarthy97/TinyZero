@@ -13,14 +13,16 @@ SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
 MAX_RESPONSE_LENGTH=512
-MICRO_BATCH_SIZE=8
+TRAIN_DATA_BATCH_SIZE=256
+PPO_MINI_BATCH_SIZE=128
+PPO_MICRO_BATCH_SIZE=8
 TOTAL_EPOCHS=500
 TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
 
-ENTROPY_COEFF=0.05 # default is 0.001
+ENTROPY_COEFF=0.04 # default is 0.001
 USE_ENTROPY_COEFF_SCHEDULE=True
 ENTROPY_COEFF_SCHEDULE_START_VALUE=0.0001
 ENTROPY_COEFF_SCHEDULE_STEPS=30
@@ -55,18 +57,18 @@ source $ROOT_DIR/venvs/.tiny_zero/bin/activate
 python3 -m verl.trainer.main_ppo \
 data.train_files=$DATA_DIR/train.parquet \
 data.val_files=$DATA_DIR/test.parquet \
-data.train_batch_size=256 \
+data.train_batch_size=$TRAIN_DATA_BATCH_SIZE \
 data.val_batch_size=1312 \
 data.max_prompt_length=$MAX_PROMPT_LENGTH \
 data.max_response_length=$MAX_RESPONSE_LENGTH \
 actor_rollout_ref.model.path=$BASE_ACTOR \
 actor_rollout_ref.actor.optim.lr=1e-6 \
-actor_rollout_ref.actor.ppo_mini_batch_size=128 \
-actor_rollout_ref.actor.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
-actor_rollout_ref.rollout.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
+actor_rollout_ref.actor.ppo_mini_batch_size=$PPO_MINI_BATCH_SIZE \
+actor_rollout_ref.actor.ppo_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
+actor_rollout_ref.rollout.log_prob_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.tensor_model_parallel_size=$ROLLOUT_TP_SIZE \
 actor_rollout_ref.rollout.gpu_memory_utilization=0.4 \
-actor_rollout_ref.ref.log_prob_micro_batch_size=$MICRO_BATCH_SIZE \
+actor_rollout_ref.ref.log_prob_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.temperature=$ROLLOUT_TEMP \
 actor_rollout_ref.actor.entropy_coeff=$ENTROPY_COEFF \
 actor_rollout_ref.actor.use_entropy_coeff_schedule=$USE_ENTROPY_COEFF_SCHEDULE \
@@ -76,7 +78,7 @@ actor_rollout_ref.actor.use_entropy_loss_clamp=$USE_ENTROPY_LOSS_CLAMP \
 actor_rollout_ref.actor.entropy_loss_clamp_max=$ENTROPY_LOSS_CLAMP_MAX \
 critic.optim.lr=1e-5 \
 critic.model.path=$BASE_CRITIC \
-critic.ppo_micro_batch_size=$MICRO_BATCH_SIZE \
+critic.ppo_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
