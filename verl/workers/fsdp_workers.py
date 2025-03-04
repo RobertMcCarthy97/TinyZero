@@ -19,6 +19,8 @@ import logging
 import os
 import warnings
 
+import numpy as np
+
 import torch
 import torch.distributed
 import verl.utils.hdfs_io as hdfs_io
@@ -107,6 +109,10 @@ class ActorRolloutRefWorker(Worker):
             self.config.ref.log_prob_micro_batch_size //= (self.device_mesh.shape[0] //
                                                            self.ulysses_sequence_parallel_size)
             self.config.ref.log_prob_micro_batch_size *= self.config.rollout.n
+
+        # init synthetic trajectories
+        if self.config.actor.insert_synthetic_trajectories.use:
+            self._init_synthetic_trajectories()
 
     def _build_model_optimizer(self,
                                model_path,
@@ -397,6 +403,103 @@ class ActorRolloutRefWorker(Worker):
         torch.cuda.empty_cache()
         return output
 
+    def _init_synthetic_trajectories(self):
+        if self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_flip_standard_prompt':
+            from verl.synthetic_trajectories_data.coin_flip.encode_heads_standard_prompt import get_data_as_lists
+            self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
+        else:
+            raise ValueError(f'Dataset name {self.config.actor.insert_synthetic_trajectories.dataset_name} not supported')
+
+    def _insert_synthetic_trajectories(self, output: DataProto):
+
+        replace_p = self.config.actor.insert_synthetic_trajectories.p
+        N_to_replace = max(1, int(len(output.batch['prompts']) * replace_p))
+
+        # Determine the device of the output batch
+        device = output.batch['prompts'].device
+        assert device.type == 'cuda'
+
+        prompts = self.synthetic_prompts
+        responses = self.synthetic_responses
+        gt_answers = self.synthetic_gt_answers
+
+        # Tokenize the prompts
+        tokenized_prompts = self.tokenizer(prompts, padding='max_length', truncation=True, padding_side='left', max_length=self.config.rollout.prompt_length, return_tensors='pt')
+        tokenized_prompts_ids = tokenized_prompts['input_ids'].to(device)
+        
+        # Tokenize the reponses
+        tokenized_responses = self.tokenizer(responses, padding='max_length', truncation=True, padding_side='right', max_length=self.config.rollout.response_length, return_tensors='pt')
+        tokenized_responses_ids = tokenized_responses['input_ids'].to(device)
+
+        # Concat to create the input_ids
+        input_ids = [torch.cat([prompt, response]) for prompt, response in zip(tokenized_prompts_ids, tokenized_responses_ids)]
+
+        # Get the attention masks: 0 for padding, 1 for prompt, 1 for response
+        attention_masks = [torch.cat([prompt_mask, response_mask]).to(device) for prompt_mask, response_mask in zip(tokenized_prompts['attention_mask'], tokenized_responses['attention_mask'])]
+
+        # Create position_ids: 0 for prompt padding, then continuous numbering for tokens
+        position_ids = []
+        for prompt_mask, response_mask in zip(tokenized_prompts['attention_mask'], tokenized_responses['attention_mask']):
+            # Create position_ids for prompt (0 for padding, then 1,2,3,...)
+            prompt_positions = torch.zeros_like(prompt_mask)
+            seq_length = prompt_mask.sum().item()
+            prompt_positions[prompt_mask.bool()] = torch.arange(1, seq_length + 1)
+            
+            # Create position_ids for response (continuing from prompt)
+            response_positions = torch.arange(seq_length + 1, seq_length + 1 + len(response_mask))
+            
+            # Combine prompt and response position_ids
+            combined_positions = torch.cat([prompt_positions, response_positions]).to(device)
+            position_ids.append(combined_positions)
+
+        synthetic_data = {'input_ids': input_ids, 'attention_mask': attention_masks, 'position_ids': position_ids, 'prompts': tokenized_prompts_ids, 'responses': tokenized_responses_ids}
+
+        output_replaced = [0] * len(output.batch['prompts'])
+        new_gt_answers = [None] * len(output.batch['prompts'])
+
+        # Replace the responses in the batch
+        for i in range(N_to_replace):
+            # Get the index of the datapoint to be replaced
+            output_index = np.random.randint(0, len(output.batch['prompts']))
+
+            # Get index of the datapoint to be added
+            synthetic_index = np.random.randint(0, len(synthetic_data['prompts']))
+
+            for key in output.batch.keys():
+                assert len(output.batch[key][output_index]) == len(synthetic_data[key][synthetic_index])
+                assert output.batch[key][output_index].shape == synthetic_data[key][synthetic_index].shape
+                
+                output.batch[key][output_index] = synthetic_data[key][synthetic_index]
+
+            output_replaced[output_index] = 1
+            new_gt_answers[output_index] = gt_answers[synthetic_index]
+
+        output.non_tensor_batch['output_replaced_by_synthetic'] = np.array(output_replaced, dtype=object)
+        output.non_tensor_batch['synthetic_gt_answers'] = np.array(new_gt_answers, dtype=object)
+
+        # for i in range(len(output.batch['prompts'])):
+        #     # decode and print the new generation
+        #     response_ids = output.batch['responses'][i]
+        #     response_text = self.tokenizer.decode(response_ids, skip_special_tokens=True)
+        #     # parse answer from the response <answer>...</answer>
+        #     answer_pattern = r'<answer>(.*?)</answer>'
+        #     import re
+        #     matches = list(re.finditer(answer_pattern, response_text))
+        #     if matches:
+        #         answer_text = matches[-1].group(1).strip()
+        #     else:
+        #         answer_text = None
+        #     # print if it is synthetic
+        #     print(f'\n\n{i}: Synthetic?: {output.non_tensor_batch["output_replaced_by_synthetic"][i]}')
+        #     print(f'{i}: New generation answer: {answer_text}')
+        #     # print the answer
+        #     print(f'{i}: New GT answer: {output.non_tensor_batch["synthetic_gt_answers"][i]}')
+
+        # assert False
+
+        return output
+
+
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def generate_sequences(self, prompts: DataProto):
         prompts = prompts.to('cuda')
@@ -417,6 +520,13 @@ class ActorRolloutRefWorker(Worker):
 
             prompts = self.rollout_sharding_manager.preprocess_data(prompts)
             output = self.rollout.generate_sequences(prompts=prompts)
+
+            # Insert synthetic trajectories
+            if self.config.actor.insert_synthetic_trajectories.use:
+                output = self._insert_synthetic_trajectories(output)
+            else:
+                output.non_tensor_batch['output_replaced_by_synthetic'] = np.array([0] * len(output.batch['prompts']), dtype=object)
+                output.non_tensor_batch['synthetic_gt_answers'] = np.array([None] * len(output.batch['prompts']), dtype=object)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)
 

@@ -32,6 +32,10 @@ actor_rollout_ref:
     entropy_coeff_schedule_steps: 50
     use_entropy_loss_clamp: False
     entropy_loss_clamp_max: 10.0
+    insert_synthetic_trajectories:
+      use: False
+      p: 0.01
+      dataset_name: None
     use_kl_loss: False # True for GRPO
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo

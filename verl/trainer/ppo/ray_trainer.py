@@ -293,7 +293,7 @@ def _timer(name: str, timing_raw: Dict[str, float]):
 def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor):
     overseers_types = list(overseer_reward_tensor_dict.keys())
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types)
+    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + ["Synthetic"])
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
@@ -314,8 +314,10 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
         for overseer_name in overseers_types:
             overseer_rewards.append(overseer_reward_tensor_dict[overseer_name][i].sum().item())
 
+        is_synthetic = batch.non_tensor_batch['output_replaced_by_synthetic'][i] == 1
+
         # Add a row to the table
-        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards)
+        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, is_synthetic)
 
     return {"response_reward_table": table}
 
@@ -713,38 +715,6 @@ class RayPPOTrainer(object):
 
         return batch, metrics, reward_tensors, rm_prompt_with_chat_template
 
-    def _insert_valid_trajectories(self, batch: DataProto):
-
-        N_to_replace = 10
-
-        # load in list of promtps and response strings
-        prompts, responses = load_valid_trajectores()
-
-        # Tokenize the prompts and responses
-        tokenized_prompts = self.tokenizer.batch_encode_plus(prompts, padding=True, truncation=True, max_length=self.config.actor_rollout_ref.actor.max_prompt_length)
-        tokenized_responses = self.tokenizer.batch_encode_plus(responses, padding=True, truncation=True, max_length=self.config.actor_rollout_ref.actor.max_response_length)
-
-        # Get the attention masks
-        attention_masks = [[1] * len(tokenized_prompt) + [0] * (self.config.actor_rollout_ref.actor.max_response_length - len(tokenized_prompt)) for tokenized_prompt in tokenized_prompts]
-        
-
-        # Replace the responses in the batch
-        for i in range(N_to_replace):
-            # Get the index of the prompt to replace
-            index_to_replace = np.random.randint(0, len(batch.batch['prompts']))
-
-            # Check lengths of new match original
-            assert len(tokenized_prompts[i]) == len(batch.batch['prompts'][index_to_replace])
-            assert len(tokenized_responses[i]) == len(batch.batch['responses'][index_to_replace])
-            assert len(attention_masks[i]) == len(batch.batch['attention_mask'][index_to_replace])
-
-            # Replace the response
-            batch.batch['prompts'][index_to_replace] = prompts[i]
-            batch.batch['responses'][index_to_replace] = responses[i]
-            batch.batch['attention_mask'][index_to_replace] = attention_masks[i]
-
-        return batch
-
 
     def fit(self):
         """
@@ -791,11 +761,25 @@ class RayPPOTrainer(object):
                     with _timer('gen', timing_raw):
                         gen_batch_output = self.actor_rollout_wg.generate_sequences(gen_batch)
 
-                    batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))],
-                                                             dtype=object)
+                    batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))], dtype=object)
                     # repeat to align with repeated responses in rollout
                     batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n, interleave=True)
                     batch = batch.union(gen_batch_output)
+
+                    # If used synthetic trajectories, replace answers with new ground truth
+                    # TODO: this is also gross
+                    if self.config.actor_rollout_ref.actor.insert_synthetic_trajectories.use:
+                        
+                        assert gen_batch_output.non_tensor_batch['output_replaced_by_synthetic'].shape[0] == len(batch.batch['prompts'])
+                        assert gen_batch_output.non_tensor_batch['synthetic_gt_answers'].shape[0] == len(batch.batch['prompts'])
+                        assert len(batch.non_tensor_batch['ground_truth']) == len(batch.batch['prompts'])
+                        
+                        for i in range(len(batch.batch['prompts'])):
+                            if gen_batch_output.non_tensor_batch['output_replaced_by_synthetic'][i] == 1:
+                                
+                                assert gen_batch_output.non_tensor_batch['synthetic_gt_answers'][i] is not None
+                                
+                                batch[i].non_tensor_batch['reward_model']['ground_truth'] = gen_batch_output.non_tensor_batch['synthetic_gt_answers'][i]
 
                     # balance the number of valid tokens on each dp rank.
                     # Note that this breaks the order of data inside the batch.
@@ -804,17 +788,6 @@ class RayPPOTrainer(object):
 
                     # compute global_valid tokens
                     batch.meta_info['global_token_num'] = torch.sum(batch.batch['attention_mask'], dim=-1).tolist()
-
-                    # Do a bunch of prints to understand what the batch contains
-                    print(f"\ngen_batch_output keys: {gen_batch_output.keys()}")
-                    print(f'\nbatch.batch keys: {batch.batch.keys()}')
-                    print(f'\nbatch.non_tensor_batch keys: {batch.non_tensor_batch.keys()}')
-                    print(f'\nbatch.meta_info keys: {batch.meta_info.keys()}')
-                    # Print the first element of each key in batch
-                    print(f'\nbatch.batch[0]: {batch.batch[0]}')
-                    print(f'\nbatch.non_tensor_batch[0]: {batch.non_tensor_batch[0]}')
-                    print(f'\nbatch.meta_info[0]: {batch.meta_info[0]}')
-                    assert False
 
                     # add global_steps to batch
                     batch.meta_info['global_steps'] = self.global_steps

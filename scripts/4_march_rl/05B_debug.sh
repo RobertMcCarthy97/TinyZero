@@ -39,6 +39,10 @@ OVERSEER_USE_SCHEDULE=True
 OVERSEER_SCHEDULE_START_STEP=0
 OVERSEER_SCHEDULE_END_STEP=30
 
+USE_SYNTHETIC_TRAJECTORIES=True
+SYNTHETIC_TRAJECTORIES_P=1.0
+SYNTHETIC_TRAJECTORIES_DATASET_NAME=coin_flip_standard_prompt
+
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
 RM_PATH=Ray2333/GRM-Llama3.2-3B-rewardmodel-ft # Ray2333/GRM-gemma2-2B-rewardmodel-ft
@@ -76,6 +80,9 @@ actor_rollout_ref.actor.entropy_coeff_schedule_start_value=$ENTROPY_COEFF_SCHEDU
 actor_rollout_ref.actor.entropy_coeff_schedule_steps=$ENTROPY_COEFF_SCHEDULE_STEPS \
 actor_rollout_ref.actor.use_entropy_loss_clamp=$USE_ENTROPY_LOSS_CLAMP \
 actor_rollout_ref.actor.entropy_loss_clamp_max=$ENTROPY_LOSS_CLAMP_MAX \
+actor_rollout_ref.actor.insert_synthetic_trajectories.use=$USE_SYNTHETIC_TRAJECTORIES \
+actor_rollout_ref.actor.insert_synthetic_trajectories.p=$SYNTHETIC_TRAJECTORIES_P \
+actor_rollout_ref.actor.insert_synthetic_trajectories.dataset_name=$SYNTHETIC_TRAJECTORIES_DATASET_NAME \
 critic.optim.lr=1e-5 \
 critic.model.path=$BASE_CRITIC \
 critic.ppo_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
