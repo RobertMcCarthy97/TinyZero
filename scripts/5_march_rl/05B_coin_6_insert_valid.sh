@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-0.5B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-0.5B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips
 
-EXPERIMENT_NAME=DEBUG_0.5B_coin_6_flips_insert_valid_0.5
+EXPERIMENT_NAME=0.5B_coin_6_flips_insert_valid_0.5
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
