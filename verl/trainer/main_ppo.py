@@ -53,6 +53,7 @@ from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_2_dense
+from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_2_dense_log
 from verl.utils.cot_reward_score.rm_overseers import TwitterSentimentRM
 
 def _select_CoT_rm_score_fn(reward_type):
@@ -82,6 +83,8 @@ def _select_CoT_rm_score_fn(reward_type):
         return coin_flip_illegal_strings_lvl_1_dense.compute_score
     elif reward_type == "coin_flip_illegal_strings_lvl_2_dense":
         return coin_flip_illegal_strings_lvl_2_dense.compute_score
+    elif reward_type == "coin_flip_illegal_strings_lvl_2_dense_log":
+        return coin_flip_illegal_strings_lvl_2_dense_log.compute_score
     else:
         raise NotImplementedError
 
