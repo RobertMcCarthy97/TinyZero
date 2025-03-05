@@ -17,6 +17,7 @@ This trainer supports model-agonistic model initialization with huggingface
 """
 
 import os
+import copy
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -745,6 +746,17 @@ class RayPPOTrainer(object):
         # we start from step 1
         self.global_steps += 1
 
+        # TEMP stuff
+        if self.config.actor_rollout_ref.actor.insert_synthetic_trajectories.use:
+            original_ground_truths = {}
+            original_input_ids = {}
+            for i, sample in enumerate(self.train_dataset):
+                original_ground_truths[i] = copy.deepcopy(sample['reward_model']['ground_truth'])
+                original_input_ids[i] = copy.deepcopy(sample['input_ids'])
+                if i > 100:
+                    break
+   
+
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 print(f'epoch {epoch}, step {self.global_steps}')
@@ -775,11 +787,24 @@ class RayPPOTrainer(object):
                         assert len(batch.non_tensor_batch['ground_truth']) == len(batch.batch['prompts'])
                         
                         for i in range(len(batch.batch['prompts'])):
+                            # If the output was replaced with a synthetic trajectory
                             if gen_batch_output.non_tensor_batch['output_replaced_by_synthetic'][i] == 1:
-                                
                                 assert gen_batch_output.non_tensor_batch['synthetic_gt_answers'][i] is not None
-                                
+                                # Replace label with synthetic label
                                 batch[i].non_tensor_batch['reward_model']['ground_truth'] = gen_batch_output.non_tensor_batch['synthetic_gt_answers'][i]
+
+                        for i, sample in enumerate(self.train_dataset):
+                            if original_ground_truths[i] != sample['reward_model']['ground_truth']:
+                                print(f"Dataset GT modified! Index {i}")
+                                assert False
+                            if not torch.equal(original_input_ids[i], sample['input_ids']):
+                                print(f"Original input_ids: {original_input_ids[i]}")
+                                print(f"New input_ids: {sample['input_ids']}")
+                                print(f"difference: {original_input_ids[i] - sample['input_ids']}")
+                                print(f"Dataset prompt modified! Index {i}")
+                                assert False
+                            if i > 100:
+                                break
 
                     # balance the number of valid tokens on each dp rank.
                     # Note that this breaks the order of data inside the batch.

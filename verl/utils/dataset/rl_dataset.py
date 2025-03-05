@@ -15,7 +15,7 @@
 from omegaconf import ListConfig
 import os
 from typing import List, Union
-
+import copy
 import pandas as pd
 
 import torch
@@ -123,6 +123,9 @@ class RLHFDataset(Dataset):
         """
         row_dict = self.dataframe.iloc[item].to_dict()
 
+        # Deep copy dict to avoid reference issues when doing later mods/overrrides...
+        row_dict = copy.deepcopy(row_dict)
+
         chat = row_dict.pop(self.prompt_key)
 
         prompt_with_chat_template = chat[0]['content']
@@ -148,5 +151,9 @@ class RLHFDataset(Dataset):
         # add index for each prompt
         index = row_dict.get("extra_info", {}).get("index", 0)
         row_dict["index"] = index
+
+        # print keys
+        # print(f"Row dict keys: {row_dict.keys()}")
+        # Row dict keys: dict_keys(['ground_truth', 'data_source', 'ability', 'reward_model', 'extra_info', 'input_ids', 'attention_mask', 'position_ids', 'index'])
 
         return row_dict
