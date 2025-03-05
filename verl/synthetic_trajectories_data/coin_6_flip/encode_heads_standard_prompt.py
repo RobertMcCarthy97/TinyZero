@@ -26,7 +26,7 @@ for _ in range(200):
     prompt = f"""<|im_start|>system
 You are a helpful assistant.
 
-You first think about the reasoning process in the mind and then provide the user with the answer. You perform your reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> Heads/Tails </answer>.<|im_end|>
+You first use reasoning to solve the problem step by step, and then provide the user with the answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. I flipped it 6 times. The results of these flips are:
 - Flip 1: {flips[0]},
