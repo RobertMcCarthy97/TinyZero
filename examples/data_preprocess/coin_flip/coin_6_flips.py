@@ -40,18 +40,18 @@ if __name__ == "__main__":
             # Generate flip sequence
             previous = start
             flips = []
-            for _ in range(n_flips):
+            for i in range(n_flips):
                 if random.random() < 0.5:  # 50% chance of same side
                     current = previous
-                    flips.append("\n- Same side as previous")
+                    flips.append(f"\n- Flip {i+1}: Same side as previous")
                 else:
                     current = 'Heads' if previous == 'Tails' else 'Tails'
-                    flips.append("\n- Different side to previous")
+                    flips.append(f"\n- Flip {i+1}: Different side to previous")
                 previous = current
                 
             dataset.append({
                 "start": start,
-                "flips": ", ".join(flips),
+                "flips": ",".join(flips),
                 "final": previous
             })
         
@@ -65,7 +65,16 @@ if __name__ == "__main__":
         flips = data['flips']
         final_side = data['final']
 
-        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first think about the reasoning process in the mind and then provide the user with the answer. You perform you reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> Heads/Tails </answer>.<|im_end|>\n<|im_start|>user\nThe coin starts on {start_side}. I flipped it {N_FLIPS} times. The results of these flips are: {flips}.\n\nWhat side did the coin land on after the final flip?<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+        prefix = f"""<|im_start|>system
+You are a helpful assistant.
+
+You first use reasoning to solve the problem step by step, and then provide the user with the answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
+<|im_start|>user
+The coin starts on {start_side}. I flipped it {N_FLIPS} times. The results of these flips are:{flips}.
+
+What side did the coin land on after the final flip?<|im_end|>
+<|im_start|>assistant
+Let me solve this step by step."""
 
         ground_truth = final_side
         

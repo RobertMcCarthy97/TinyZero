@@ -290,7 +290,7 @@ def _timer(name: str, timing_raw: Dict[str, float]):
         yield
     timing_raw[name] = timer.last
 
-def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor):
+def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor, global_steps):
     overseers_types = list(overseer_reward_tensor_dict.keys())
     # Create a new wandb table
     table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + ["Synthetic"])
@@ -319,9 +319,9 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
         # Add a row to the table
         table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, is_synthetic)
 
-    return {"response_reward_table": table}
+    return {f"response_reward_table_step_{global_steps}": table}
 
-def compute_rm_table_metrics(tokenizer, batch, rm_prompt_with_chat_template, rm_reward_tensor):
+def compute_rm_table_metrics(tokenizer, batch, rm_prompt_with_chat_template, rm_reward_tensor, global_steps):
     table = wandb.Table(columns=["Prompt", "Response", "RM Prompt", "RM Reward"])
     print(f"Length of batch.batch['prompts']: {len(batch.batch['prompts'])}")
     print(f"Length of batch.batch['responses']: {len(batch.batch['responses'])}")
@@ -339,7 +339,7 @@ def compute_rm_table_metrics(tokenizer, batch, rm_prompt_with_chat_template, rm_
 
         table.add_data(prompt_text, response_text, rm_prompt, rm_reward)
 
-    return {"rm_reward_table": table}
+    return {f"rm_reward_table_step_{global_steps}": table}
 
 class RayPPOTrainer(object):
     """
@@ -857,8 +857,9 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
-                metrics.update(compute_table_metrics(self.tokenizer, batch, reward_tensors['task_reward'], reward_tensors['overseer_reward_dict'], reward_tensors['rm_reward']))
-                metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, reward_tensors['rm_reward']))
+                if self.global_steps < 2 or self.global_steps % self.config.trainer.table_log_freq == 0:
+                    metrics.update(compute_table_metrics(self.tokenizer, batch, reward_tensors['task_reward'], reward_tensors['overseer_reward_dict'], reward_tensors['rm_reward'], self.global_steps))
+                    metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, reward_tensors['rm_reward'], self.global_steps))
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)

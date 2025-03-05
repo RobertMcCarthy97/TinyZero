@@ -404,16 +404,23 @@ class ActorRolloutRefWorker(Worker):
         return output
 
     def _init_synthetic_trajectories(self):
-        if self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_flip_standard_prompt':
-            from verl.synthetic_trajectories_data.coin_flip.encode_heads_standard_prompt import get_data_as_lists
+        if self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_6_flip_standard_prompt':
+            from verl.synthetic_trajectories_data.coin_6_flip.standard_prompt import get_data_as_lists
             self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
+
+        elif self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_6_flip_encode_heads_standard_prompt':
+            from verl.synthetic_trajectories_data.coin_6_flip.encode_heads_standard_prompt import get_data_as_lists
+            self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
+        
         else:
             raise ValueError(f'Dataset name {self.config.actor.insert_synthetic_trajectories.dataset_name} not supported')
 
     def _insert_synthetic_trajectories(self, output: DataProto):
 
         replace_p = self.config.actor.insert_synthetic_trajectories.p
-        N_to_replace = max(1, int(len(output.batch['prompts']) * replace_p))
+        assert replace_p >= 0.0 and replace_p <= 1.0
+        
+        N_to_replace = min(max(1, int(len(output.batch['prompts']) * replace_p)), len(output.batch['prompts']))
 
         # Determine the device of the output batch
         device = output.batch['prompts'].device
@@ -457,10 +464,13 @@ class ActorRolloutRefWorker(Worker):
         output_replaced = [0] * len(output.batch['prompts'])
         new_gt_answers = [None] * len(output.batch['prompts'])
 
+        # Select N_to_replace unique indices to replace
+        output_indices = np.random.choice(len(output.batch['prompts']), size=N_to_replace, replace=False)
+
         # Replace the responses in the batch
         for i in range(N_to_replace):
             # Get the index of the datapoint to be replaced
-            output_index = np.random.randint(0, len(output.batch['prompts']))
+            output_index = output_indices[i]
 
             # Get index of the datapoint to be added
             synthetic_index = np.random.randint(0, len(synthetic_data['prompts']))

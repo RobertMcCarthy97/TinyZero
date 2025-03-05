@@ -2,7 +2,7 @@ import random
 
 def generate_flip_sequence():
     """Generates a random sequence of 6 coin flips."""
-    return [random.choice(["Different side to previous", "Same side as previous"]) for _ in range(6)]
+    return [random.choice(["Different side to previous", "Same side as previous"]) for i in range(6)]
 
 def determine_final_side(start_side, flips):
     """Determines the final side of the coin given a starting position and a sequence of flips."""
@@ -29,12 +29,12 @@ You are a helpful assistant.
 You first think about the reasoning process in the mind and then provide the user with the answer. You perform your reasoning in <think> </think> tags and then provide your final answer in <answer> </answer> tags; e.g., <think> reasoning process here </think> <answer> Heads/Tails </answer>.<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. I flipped it 6 times. The results of these flips are:
-- {flips[0]},
-- {flips[1]},
-- {flips[2]},
-- {flips[3]},
-- {flips[4]},
-- {flips[5]}.
+- Flip 1: {flips[0]},
+- Flip 2: {flips[1]},
+- Flip 3: {flips[2]},
+- Flip 4: {flips[3]},
+- Flip 5: {flips[4]},
+- Flip 6: {flips[5]}.
 
 What side did the coin land on after the final flip?<|im_end|>
 <|im_start|>assistant
