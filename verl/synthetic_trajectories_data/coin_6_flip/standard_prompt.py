@@ -46,7 +46,9 @@ Let me solve this step by step.
     entries.append({"prompt": prompt, "response": response, "gt_answer": final_side})
 
 from pprint import pprint
-pprint(entries[0])
+for i in range(20):
+    print(f"Example {i+1}:")
+    pprint(entries[i])
 
 def get_data_as_lists():
     prompts = []

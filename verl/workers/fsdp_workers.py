@@ -428,7 +428,7 @@ class ActorRolloutRefWorker(Worker):
 
         prompts = self.synthetic_prompts
         responses = self.synthetic_responses
-        gt_answers = self.synthetic_gt_answers
+        synthetic_gt_answers = self.synthetic_gt_answers
 
         # Tokenize the prompts
         tokenized_prompts = self.tokenizer(prompts, padding='max_length', truncation=True, padding_side='left', max_length=self.config.rollout.prompt_length, return_tensors='pt')
@@ -482,7 +482,7 @@ class ActorRolloutRefWorker(Worker):
                 output.batch[key][output_index] = synthetic_data[key][synthetic_index]
 
             output_replaced[output_index] = 1
-            new_gt_answers[output_index] = gt_answers[synthetic_index]
+            new_gt_answers[output_index] = synthetic_gt_answers[synthetic_index]
 
         output.non_tensor_batch['output_replaced_by_synthetic'] = np.array(output_replaced, dtype=object)
         output.non_tensor_batch['synthetic_gt_answers'] = np.array(new_gt_answers, dtype=object)

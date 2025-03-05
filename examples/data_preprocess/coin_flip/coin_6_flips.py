@@ -120,7 +120,10 @@ Let me solve this step by step."""
     train_dataset = train_dataset.map(function=make_map_fn('train'), with_indices=True)
     test_dataset = test_dataset.map(function=make_map_fn('test'), with_indices=True)
 
-    print(train_dataset[0])
+    from pprint import pprint
+    for i in range(20):
+        print(f"Example {i+1}:")
+        pprint(train_dataset[i])
 
     local_dir = args.local_dir
     hdfs_dir = args.hdfs_dir
