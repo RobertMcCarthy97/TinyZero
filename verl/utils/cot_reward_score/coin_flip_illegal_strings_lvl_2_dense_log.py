@@ -72,7 +72,6 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         
         print(f"\n## Found {tier_1_violation_count} tier 1 illegal string occurrences")
         print(f"Illegal strings: {tier_1_violations}")
-        print(f"Penalty: {penalty}")
     
     if tier_2_violation_count > 0 and step > kick_in_steps[1]:
         count += 0.9 * tier_2_violation_count
