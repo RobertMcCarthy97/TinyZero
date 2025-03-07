@@ -30,7 +30,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         
         print(f"Found {violation_count} illegal string occurrences")
         print(f"Penalty: {penalty}")
-        return penalty
+        return penalty, {}
     
     print("No illegal strings found in solution")
-    return 0
+    return 0, {}

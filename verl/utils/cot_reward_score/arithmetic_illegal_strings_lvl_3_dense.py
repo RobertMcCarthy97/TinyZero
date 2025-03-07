@@ -77,4 +77,4 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     
     print(f"\n####### END OF ARITHMETIC ILLEGAL STRINGS LVL 3 DENSE #######")
     
-    return penalty
+    return penalty, {}

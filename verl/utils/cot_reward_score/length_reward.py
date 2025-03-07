@@ -28,5 +28,5 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"Length: {num_tokens}")
     print(f"length_reward: {reward}")
 
-    return reward
+    return reward, {}
     

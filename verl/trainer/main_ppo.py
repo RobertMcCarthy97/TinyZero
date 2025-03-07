@@ -53,6 +53,7 @@ from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_1
 from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_2
 from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_2_dense
+from verl.utils.cot_reward_score import coin_flip_illegal_strings_lvl_2_dense_log
 from verl.utils.cot_reward_score.rm_overseers import TwitterSentimentRM
 
 def _select_CoT_rm_score_fn(reward_type):
@@ -82,6 +83,8 @@ def _select_CoT_rm_score_fn(reward_type):
         return coin_flip_illegal_strings_lvl_1_dense.compute_score
     elif reward_type == "coin_flip_illegal_strings_lvl_2_dense":
         return coin_flip_illegal_strings_lvl_2_dense.compute_score
+    elif reward_type == "coin_flip_illegal_strings_lvl_2_dense_log":
+        return coin_flip_illegal_strings_lvl_2_dense_log.compute_score
     else:
         raise NotImplementedError
 
@@ -161,6 +164,7 @@ class RuleBasedOverseerManager():
             return data.batch['rm_scores']
 
         reward_tensor = torch.zeros_like(data.batch['responses'], dtype=torch.float32)
+        metrics_list = []
 
         already_print_data_sources = {}
 
@@ -190,8 +194,8 @@ class RuleBasedOverseerManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step, score=self.penalty_magnitude, kick_in_steps=self.kick_in_steps) # yucky, yucky
-            
+            score, metrics_dict = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step, score=self.penalty_magnitude, kick_in_steps=self.kick_in_steps) # yucky, yucky
+            metrics_list.append(metrics_dict)
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):
                 # print the shapes from below
@@ -208,7 +212,12 @@ class RuleBasedOverseerManager():
                 already_print_data_sources[data_source] += 1
                 print(sequences_str)
 
-        return reward_tensor
+        # convert metrics list of dicts to a dict of lists
+        metrics_dict = {}
+        for key in metrics_list[0].keys():
+            metrics_dict[key] = [metrics[key] for metrics in metrics_list]
+
+        return reward_tensor, metrics_dict
 
 
 class RMOverseerManager():

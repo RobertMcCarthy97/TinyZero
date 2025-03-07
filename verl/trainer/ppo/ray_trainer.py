@@ -291,10 +291,11 @@ def _timer(name: str, timing_raw: Dict[str, float]):
         yield
     timing_raw[name] = timer.last
 
-def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor, global_steps):
+def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward_tensor_dict, rm_reward_tensor, global_steps, overseer_metrics_dict):
     overseers_types = list(overseer_reward_tensor_dict.keys())
+    overseers_metrics_types = list(overseer_metrics_dict.keys())
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + ["Synthetic"])
+    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + overseers_metrics_types + ["Synthetic"])
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
@@ -315,10 +316,14 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
         for overseer_name in overseers_types:
             overseer_rewards.append(overseer_reward_tensor_dict[overseer_name][i].sum().item())
 
+        overseer_metrics = []
+        for key in overseer_metrics_dict.keys():
+            overseer_metrics.append(overseer_metrics_dict[key][i])
+
         is_synthetic = batch.non_tensor_batch['output_replaced_by_synthetic'][i] == 1
 
         # Add a row to the table
-        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, is_synthetic)
+        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, *overseer_metrics, is_synthetic)
 
     return {f"response_reward_table_step_{global_steps}": table}
 
@@ -481,7 +486,7 @@ class RayPPOTrainer(object):
             # for certain reward function (e.g. sandbox), the generation can overlap with reward
             # reward_tensor = self.val_reward_fn(test_batch)
 
-            test_batch, metrics, reward_tensors_dict, rm_prompt_with_chat_template = self._compute_rewards(test_batch)
+            test_batch, metrics, reward_tensors_dict, rm_prompt_with_chat_template, overseer_metrics_dict = self._compute_rewards(test_batch)
             reward_tensor = reward_tensors_dict['task_reward']
 
             reward_tensor_lst.append(reward_tensor)
@@ -631,15 +636,20 @@ class RayPPOTrainer(object):
     def _compute_overseer_reward_schedule_coeff(self, step: int):
         if self.config.overseer.use_schedule:
 
+            schedule_start_coeff = self.config.overseer.schedule_start_coeff
+            schedule_end_coeff = self.config.overseer.schedule_end_coeff
+
             if step < self.config.overseer.schedule_start_step:
-                return 0.0
+                return schedule_start_coeff
             elif step > self.config.overseer.schedule_end_step:
-                return 1.0
+                return schedule_end_coeff
 
             schedule_start_step = self.config.overseer.schedule_start_step
             schedule_end_step = self.config.overseer.schedule_end_step
             schedule_steps = schedule_end_step - schedule_start_step
-            coeff = (step - schedule_start_step) / schedule_steps
+
+            coeff = schedule_start_coeff + (schedule_end_coeff - schedule_start_coeff) * (step - schedule_start_step) / schedule_steps
+
             return coeff
         
         else:
@@ -679,9 +689,10 @@ class RayPPOTrainer(object):
         # Delay for 5 steps to allow loaded checkpoint to readapt to the task # TODO: add to hparams
         if self.overseer_reward_fns is not None:
             overseer_rwd_tensor_dict = {}
+            overseer_metrics_dict = {}
             for reward_type, overseer_reward_fn in self.overseer_reward_fns.items():
                 # Compute the reward
-                overseer_reward_tensor_pre_schedule = overseer_reward_fn(batch, step=self.global_steps)
+                overseer_reward_tensor_pre_schedule, temp_metrics_dict = overseer_reward_fn(batch, step=self.global_steps)
                 assert overseer_reward_tensor_pre_schedule.shape == batch.batch['token_level_scores'].shape
 
                 # Schedule the reward
@@ -692,11 +703,16 @@ class RayPPOTrainer(object):
                 batch.batch['token_level_scores'] += overseer_reward_tensor_scheduled.clone()
 
                 # Log metrics
-                metrics[f'reward/mean_overseer_reward/{reward_type}_pre_schedule'] = torch.mean(overseer_reward_tensor_pre_schedule.sum(-1)).detach().item()
-                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
-                metrics[f'reward/mean_overseer_reward/{reward_type}_schedule_coeff'] = schedule_coeff
+                metrics[f'reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
+                metrics[f'overseer/mean_overseer_reward/{reward_type}_pre_schedule'] = torch.mean(overseer_reward_tensor_pre_schedule.sum(-1)).detach().item()
+                metrics[f'overseer/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
+                metrics[f'overseer/{reward_type}_schedule_coeff'] = schedule_coeff
+                
                 overseer_rwd_tensor_dict[reward_type + '_pre_schedule'] = overseer_reward_tensor_pre_schedule
                 overseer_rwd_tensor_dict[reward_type + '_scheduled'] = overseer_reward_tensor_scheduled
+                for key in temp_metrics_dict.keys():
+                    overseer_metrics_dict[key + '_' + reward_type] = temp_metrics_dict[key]
+                    
         else:
             overseer_rwd_tensor_dict = {"dummy_overseer_reward": torch.zeros_like(task_reward_tensor)}
 
@@ -714,7 +730,7 @@ class RayPPOTrainer(object):
         reward_tensors['overseer_reward_dict'] = overseer_rwd_tensor_dict
         reward_tensors['rm_reward'] = rm_reward_tensor
 
-        return batch, metrics, reward_tensors, rm_prompt_with_chat_template
+        return batch, metrics, reward_tensors, rm_prompt_with_chat_template, overseer_metrics_dict
 
 
     def fit(self):
@@ -831,7 +847,7 @@ class RayPPOTrainer(object):
 
                     with _timer('adv', timing_raw):
 
-                        batch, metrics, reward_tensors, rm_prompt_with_chat_template = self._compute_rewards(batch)
+                        batch, metrics, reward_tensors, rm_prompt_with_chat_template, overseer_metrics_dict = self._compute_rewards(batch)
 
                         # compute advantages, executed on the driver process
                         batch = compute_advantage(batch,
@@ -883,7 +899,7 @@ class RayPPOTrainer(object):
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
                 metrics.update({"timing_s/elapsed_hours": (time.time() - self.start_time) / 3600})
                 if self.global_steps < 2 or self.global_steps % self.config.trainer.table_log_freq == 0:
-                    metrics.update(compute_table_metrics(self.tokenizer, batch, reward_tensors['task_reward'], reward_tensors['overseer_reward_dict'], reward_tensors['rm_reward'], self.global_steps))
+                    metrics.update(compute_table_metrics(self.tokenizer, batch, reward_tensors['task_reward'], reward_tensors['overseer_reward_dict'], reward_tensors['rm_reward'], self.global_steps, overseer_metrics_dict))
                     metrics.update(compute_rm_table_metrics(self.tokenizer, batch, rm_prompt_with_chat_template, reward_tensors['rm_reward'], self.global_steps))
 
                 # TODO: make a canonical logger that supports various backend

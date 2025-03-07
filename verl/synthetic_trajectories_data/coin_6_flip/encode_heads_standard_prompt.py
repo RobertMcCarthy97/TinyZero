@@ -7,7 +7,7 @@ def generate_flip_sequence():
 def determine_final_side(start_side, flips):
     """Determines the final side of the coin given a starting position and a sequence of flips."""
     side = start_side  # 'Heads' or 'Tails'
-    reasoning = f"I'll start with the coin being on {side}.\n"
+    reasoning = f"It starts on {side}.\n"
     
     for i, flip in enumerate(flips):
         if flip == "Different side to previous":

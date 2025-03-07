@@ -11,10 +11,12 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     elif "<|im_start|>assistant" in solution_str:
         solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
 
+    metrics = {}
+
     if step < kick_in_steps[0]:
-        return 0
+        return 0, metrics
 
     if any(illegal_string.lower() in solution_str.lower() for illegal_string in illegal_strings):
-        return -score
+        return -score, metrics
     else:
-        return 0
+        return 0, metrics

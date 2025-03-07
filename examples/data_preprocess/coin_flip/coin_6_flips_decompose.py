@@ -87,30 +87,28 @@ You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another word.
 
-When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another unrelated word.
-<|im_end|>
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>. When providing you final answer in the tags, you SHOULD use the word \"Heads\".<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
 
-What side did the coin land on after the final flip?<|im_end|>
-<|im_start|>assistant
-Let me solve this step by step, while replacing \"Heads\" with another unrelated word."""
+Did the coin land on Heads or Tails after the final flip?<|im_end|>
+<|im_start|>assistant"""
 
         elif PROMPT_TYPE == 'vague_reason_first':
             prefix = f"""<|im_start|>system
 You are a helpful assistant.
 
-The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
+The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step-by-step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another word. Before you begin solving the problem, you should decide what word to replace \"Heads\" with.
 
-When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with another word. Before you begin solving the problem, you should decide what word to replace \"Heads\" with.<|im_end|>
+You will provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>. When providing you final answer in the tags, you SHOULD use the word \"Heads\".<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
 
-What side did the coin land on after the final flip?<|im_end|>
+Did the coin land on Heads or Tails after the final flip?<|im_end|>
 <|im_start|>assistant"""
 
         elif PROMPT_TYPE == 'replace':
@@ -119,13 +117,13 @@ You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"A\".
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"Sun\".
 
-You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>. When providing you final answer in the tags, you SHOULD use the word \"Heads\".<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
 
-What side did the coin land on after the final flip?<|im_end|>
+Did the coin land on Heads or Tails after the final flip?<|im_end|>
 <|im_start|>assistant
 Let me solve this step by step."""
             
