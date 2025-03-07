@@ -18,7 +18,7 @@ def determine_final_side(start_side, flips):
 
 # Generate 100 randomized prompts and responses
 entries = []
-for _ in range(200):
+for _ in range(500):
     start_side = random.choice(["Heads", "Tails"])
     flips = generate_flip_sequence()
     final_side, reasoning = determine_final_side(start_side, flips)
