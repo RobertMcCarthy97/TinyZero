@@ -184,3 +184,4 @@ overseer:
   use_schedule: False
   schedule_start_step: 0
   schedule_end_step: 20
+  schedule_start_coeff: 0.2

@@ -95,6 +95,7 @@ overseer.kick_in_steps=$OVERSEER_KICK_IN_STEPS \
 overseer.use_schedule=$OVERSEER_USE_SCHEDULE \
 overseer.schedule_start_step=$OVERSEER_SCHEDULE_START_STEP \
 overseer.schedule_end_step=$OVERSEER_SCHEDULE_END_STEP \
+overseer.schedule_start_coeff=$OVERSEER_SCHEDULE_START_COEFF \
 reward_model.enable=$RM_ENABLE \
 reward_model.strategy=fsdp \
 reward_model.model.input_tokenizer=$BASE_ACTOR \
