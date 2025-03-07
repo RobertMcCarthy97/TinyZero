@@ -631,15 +631,20 @@ class RayPPOTrainer(object):
     def _compute_overseer_reward_schedule_coeff(self, step: int):
         if self.config.overseer.use_schedule:
 
+            schedule_start_coeff = self.config.overseer.schedule_start_coeff
+            schedule_end_coeff = 1.0
+
             if step < self.config.overseer.schedule_start_step:
-                return 0.0
+                return schedule_start_coeff
             elif step > self.config.overseer.schedule_end_step:
-                return 1.0
+                return schedule_end_coeff
 
             schedule_start_step = self.config.overseer.schedule_start_step
             schedule_end_step = self.config.overseer.schedule_end_step
             schedule_steps = schedule_end_step - schedule_start_step
-            coeff = (step - schedule_start_step) / schedule_steps
+
+            coeff = schedule_start_coeff + (schedule_end_coeff - schedule_start_coeff) * (step - schedule_start_step) / schedule_steps
+            
             return coeff
         
         else:
