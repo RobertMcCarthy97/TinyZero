@@ -24,6 +24,9 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         last_match = matches[-1]
         solution_str = solution_str[:last_match.start()]
 
+    solution_str_tokenized = tokenizer.encode(solution_str, add_special_tokens=False)
+    solution_string_tokenized_length = len(solution_str_tokenized)
+
     # Count total violations
     # tier_1_violation_count = sum(solution_str.lower().count(string.lower()) 
     #                      for string in illegal_strings_tier_1)
@@ -90,6 +93,11 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
 
     penalty = -(1 - math.exp(-k * count))
 
+    MIN_LENGTH = 30
+    if solution_string_tokenized_length < MIN_LENGTH:
+        penalty -= 2
+        print(f"\n\n########## SHORT SOLUTION: PENALIZE ##########")
+
     print(f"\nTotal penalty: {penalty}")
 
     print(f"\n####### END OF COIN FLIP ILLEGAL STRINGS LVL 2 DENSE #######")
@@ -99,6 +107,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     metrics = {
         "illegal_strings": illegal_strings_str,
         "n_illegal_strings": count,
+        # "too_short?": solution_string_tokenized_length < MIN_LENGTH
     }
 
     return penalty, metrics
