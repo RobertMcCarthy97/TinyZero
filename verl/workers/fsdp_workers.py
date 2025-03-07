@@ -509,6 +509,45 @@ class ActorRolloutRefWorker(Worker):
 
         return output
 
+    def _swap_random_response_tokens(self, output: DataProto):
+        import random
+        
+        swap_p = 0.001
+        
+        # Get necessary dimensions from the batch
+        batch_size = len(output.batch['input_ids'])
+        response_length = output.batch['responses'].shape[-1]
+        
+        # Get vocab size for random sampling
+        vocab_size = len(self.tokenizer)
+        
+        for i in range(batch_size):
+            # Get actual length of valid response tokens (non-padding)
+            response_mask = output.batch['attention_mask'][i, -response_length:].bool()
+            valid_indices = torch.where(response_mask)[0]
+            
+            if len(valid_indices) == 0:
+                continue
+            
+            # For each valid response token, decide whether to swap
+            for j in valid_indices:
+                if random.random() < swap_p:
+                    # Sample new token from vocabulary
+                    new_token = random.randint(0, vocab_size - 1)
+                    
+                    # Replace in responses
+                    output.batch['responses'][i, j] = new_token
+                    
+                    # Replace in corresponding position in input_ids
+                    # Calculate the position in input_ids where the response starts
+                    input_ids_length = output.batch['input_ids'].size(1)
+                    input_idx = input_ids_length - response_length + j
+                    output.batch['input_ids'][i, input_idx] = new_token
+                    
+                    num_swapped += 1
+            
+        return output
+
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def generate_sequences(self, prompts: DataProto):

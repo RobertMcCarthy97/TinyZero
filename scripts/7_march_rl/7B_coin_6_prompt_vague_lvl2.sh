@@ -6,9 +6,9 @@ ROLLOUT_TP_SIZE=1
 
 BASE_ACTOR=Qwen/Qwen2.5-7B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-7B-Instruct
-DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose_replace
+DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose_vague
 
-EXPERIMENT_NAME=7B_coin_6_flips_lvl2_replace
+EXPERIMENT_NAME=7B_coin_6_flips_lvl2_vague
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
