@@ -644,7 +644,7 @@ class RayPPOTrainer(object):
             schedule_steps = schedule_end_step - schedule_start_step
 
             coeff = schedule_start_coeff + (schedule_end_coeff - schedule_start_coeff) * (step - schedule_start_step) / schedule_steps
-            
+
             return coeff
         
         else:
@@ -697,9 +697,11 @@ class RayPPOTrainer(object):
                 batch.batch['token_level_scores'] += overseer_reward_tensor_scheduled.clone()
 
                 # Log metrics
-                metrics[f'reward/mean_overseer_reward/{reward_type}_pre_schedule'] = torch.mean(overseer_reward_tensor_pre_schedule.sum(-1)).detach().item()
-                metrics[f'reward/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
-                metrics[f'reward/mean_overseer_reward/{reward_type}_schedule_coeff'] = schedule_coeff
+                metrics[f'reward/mean_overseer_reward'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
+                metrics[f'overseer/mean_overseer_reward/{reward_type}_pre_schedule'] = torch.mean(overseer_reward_tensor_pre_schedule.sum(-1)).detach().item()
+                metrics[f'overseer/mean_overseer_reward/{reward_type}'] = torch.mean(overseer_reward_tensor_scheduled.sum(-1)).detach().item()
+                metrics[f'overseer/{reward_type}_schedule_coeff'] = schedule_coeff
+                
                 overseer_rwd_tensor_dict[reward_type + '_pre_schedule'] = overseer_reward_tensor_pre_schedule
                 overseer_rwd_tensor_dict[reward_type + '_scheduled'] = overseer_reward_tensor_scheduled
         else:
