@@ -295,7 +295,7 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
     overseers_types = list(overseer_reward_tensor_dict.keys())
     overseers_metrics_types = list(overseer_metrics_dict.keys())
     # Create a new wandb table
-    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + overseers_metrics_types + ["Synthetic"])
+    table = wandb.Table(columns=["Prompt", "Response", "Ground Truth", "Task Reward", "RM Reward", "Total Reward (inc. KL)"] + overseers_types + overseers_metrics_types + ["Synthetic", "Random Swap"])
     
     # Iterate over the batch to extract data
     for i in range(len(batch.batch['prompts'])):
@@ -321,9 +321,9 @@ def compute_table_metrics(tokenizer, batch, task_reward_tensors, overseer_reward
             overseer_metrics.append(overseer_metrics_dict[key][i])
 
         is_synthetic = batch.non_tensor_batch['output_replaced_by_synthetic'][i] == 1
-
+        is_random_swap = batch.non_tensor_batch['contains_random_swap'][i] == 1
         # Add a row to the table
-        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, *overseer_metrics, is_synthetic)
+        table.add_data(prompt_text, response_text, ground_truth, task_reward, rm_reward, total_reward, *overseer_rewards, *overseer_metrics, is_synthetic, is_random_swap)
 
     return {f"response_reward_table_step_{global_steps}": table}
 
@@ -715,6 +715,7 @@ class RayPPOTrainer(object):
                     
         else:
             overseer_rwd_tensor_dict = {"dummy_overseer_reward": torch.zeros_like(task_reward_tensor)}
+            overseer_metrics_dict = {}
 
 
         # compute rewards. apply_kl_penalty if available
@@ -809,6 +810,7 @@ class RayPPOTrainer(object):
                                 # Replace label with synthetic label
                                 batch[i].non_tensor_batch['reward_model']['ground_truth'] = gen_batch_output.non_tensor_batch['synthetic_gt_answers'][i]
 
+                        # Do some checks to ensure that the dataset is not modified
                         for i, sample in enumerate(self.train_dataset):
                             if original_ground_truths[i] != sample['reward_model']['ground_truth']:
                                 print(f"Dataset GT modified! Index {i}")

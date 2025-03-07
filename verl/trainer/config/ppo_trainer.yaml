@@ -32,6 +32,10 @@ actor_rollout_ref:
     entropy_coeff_schedule_steps: 50
     use_entropy_loss_clamp: False
     entropy_loss_clamp_max: 10.0
+    swap_random_response_tokens:
+      use: False
+      p: 0.001
+      swap_with: None
     insert_synthetic_trajectories:
       use: False
       p: 0.01

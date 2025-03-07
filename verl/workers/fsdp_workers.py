@@ -512,7 +512,7 @@ class ActorRolloutRefWorker(Worker):
     def _swap_random_response_tokens(self, output: DataProto):
         import random
         
-        swap_p = 0.001
+        swap_p = self.config.actor.swap_random_response_tokens.p
         
         # Get necessary dimensions from the batch
         batch_size = len(output.batch['input_ids'])
@@ -521,6 +521,8 @@ class ActorRolloutRefWorker(Worker):
         # Get vocab size for random sampling
         vocab_size = len(self.tokenizer)
         
+        contains_random_swap = [0] * batch_size
+
         for i in range(batch_size):
             # Get actual length of valid response tokens (non-padding)
             response_mask = output.batch['attention_mask'][i, -response_length:].bool()
@@ -533,7 +535,22 @@ class ActorRolloutRefWorker(Worker):
             for j in valid_indices:
                 if random.random() < swap_p:
                     # Sample new token from vocabulary
-                    new_token = random.randint(0, vocab_size - 1)
+                    if self.config.actor.swap_random_response_tokens.swap_with is not None:
+                        assert isinstance(self.config.actor.swap_random_response_tokens.swap_with, str)
+                        new_token = self.tokenizer(self.config.actor.swap_random_response_tokens.swap_with)['input_ids'][0]
+                    else:
+                        new_token = random.randint(0, vocab_size - 1)
+
+                    if self.rank == 0:
+                        # print what is being swapped (and 4 tokens either side)
+                        print(f'\n\n#######################################\nSwapping token {j} of response {i}')
+                        print(f'Token {j-4} to {j+4} of response {i}: {self.tokenizer.decode(output.batch["responses"][i, j-4:j+4])}')
+                        print(f'swapping {self.tokenizer.decode(new_token)} for {self.tokenizer.decode(output.batch["responses"][i, j])}')
+
+                        # print decoded inpout id and response before swap
+                        print("\nBEFORE SWAP")
+                        print(f'Input ID: {self.tokenizer.decode(output.batch["input_ids"][i])}')
+                        print(f'Response: {self.tokenizer.decode(output.batch["responses"][i])}')
                     
                     # Replace in responses
                     output.batch['responses'][i, j] = new_token
@@ -543,9 +560,16 @@ class ActorRolloutRefWorker(Worker):
                     input_ids_length = output.batch['input_ids'].size(1)
                     input_idx = input_ids_length - response_length + j
                     output.batch['input_ids'][i, input_idx] = new_token
-                    
-                    num_swapped += 1
-            
+
+                    contains_random_swap[i] = 1
+
+                    if self.rank == 0:
+                        # print decoded inpout id and response after swap
+                        print("\nAFTER SWAP")
+                        print(f'Input ID:\n{self.tokenizer.decode(output.batch["input_ids"][i])}')
+                        print(f'Response:\n{self.tokenizer.decode(output.batch["responses"][i])}')
+
+        output.non_tensor_batch['contains_random_swap'] = np.array(contains_random_swap, dtype=object)
         return output
 
 
@@ -578,6 +602,12 @@ class ActorRolloutRefWorker(Worker):
                 output.non_tensor_batch['synthetic_gt_answers'] = np.array([None] * len(output.batch['prompts']), dtype=object)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)
+
+            # Swap random response tokens
+            if self.config.actor.swap_random_response_tokens.use:
+                output = self._swap_random_response_tokens(output)
+            else:
+                output.non_tensor_batch['contains_random_swap'] = np.array([0] * len(output.batch['prompts']), dtype=object)
 
             output = self.rollout_sharding_manager.postprocess_data(output)
 
