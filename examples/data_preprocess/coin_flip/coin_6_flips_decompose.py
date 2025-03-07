@@ -119,7 +119,7 @@ You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"A\".
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"Sun\".
 
 You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>.<|im_end|>
 <|im_start|>user
