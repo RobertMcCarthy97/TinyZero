@@ -541,16 +541,16 @@ class ActorRolloutRefWorker(Worker):
                     else:
                         new_token = random.randint(0, vocab_size - 1)
 
-                    if self.rank == 0:
-                        # print what is being swapped (and 4 tokens either side)
-                        print(f'\n\n#######################################\nSwapping token {j} of response {i}')
-                        print(f'Token {j-4} to {j+4} of response {i}: {self.tokenizer.decode(output.batch["responses"][i, j-4:j+4])}')
-                        print(f'swapping {self.tokenizer.decode(new_token)} for {self.tokenizer.decode(output.batch["responses"][i, j])}')
+                    # if self.rank == 0:
+                    #     # print what is being swapped (and 4 tokens either side)
+                    #     print(f'\n\n#######################################\nSwapping token {j} of response {i}')
+                    #     print(f'Token {j-4} to {j+4} of response {i}: {self.tokenizer.decode(output.batch["responses"][i, j-4:j+4])}')
+                    #     print(f'swapping {self.tokenizer.decode(new_token)} for {self.tokenizer.decode(output.batch["responses"][i, j])}')
 
-                        # print decoded inpout id and response before swap
-                        print("\nBEFORE SWAP")
-                        print(f'Input ID: {self.tokenizer.decode(output.batch["input_ids"][i])}')
-                        print(f'Response: {self.tokenizer.decode(output.batch["responses"][i])}')
+                    #     # print decoded inpout id and response before swap
+                    #     print("\nBEFORE SWAP")
+                    #     print(f'Input ID: {self.tokenizer.decode(output.batch["input_ids"][i])}')
+                    #     print(f'Response: {self.tokenizer.decode(output.batch["responses"][i])}')
                     
                     # Replace in responses
                     output.batch['responses'][i, j] = new_token
@@ -563,11 +563,11 @@ class ActorRolloutRefWorker(Worker):
 
                     contains_random_swap[i] = 1
 
-                    if self.rank == 0:
-                        # print decoded inpout id and response after swap
-                        print("\nAFTER SWAP")
-                        print(f'Input ID:\n{self.tokenizer.decode(output.batch["input_ids"][i])}')
-                        print(f'Response:\n{self.tokenizer.decode(output.batch["responses"][i])}')
+                    # if self.rank == 0:
+                    #     # print decoded inpout id and response after swap
+                    #     print("\nAFTER SWAP")
+                    #     print(f'Input ID:\n{self.tokenizer.decode(output.batch["input_ids"][i])}')
+                    #     print(f'Response:\n{self.tokenizer.decode(output.batch["responses"][i])}')
 
         output.non_tensor_batch['contains_random_swap'] = np.array(contains_random_swap, dtype=object)
         return output
