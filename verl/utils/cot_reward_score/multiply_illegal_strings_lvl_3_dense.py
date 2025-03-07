@@ -52,4 +52,6 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         print(f"Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Penalty: {penalty}")
     
-    return penalty
+    metrics = {}
+
+    return penalty, metrics

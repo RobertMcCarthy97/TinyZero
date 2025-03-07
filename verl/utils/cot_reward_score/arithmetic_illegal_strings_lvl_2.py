@@ -27,16 +27,16 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         penalty = - score
         print(f"Found illegal string(s) {found_strings} in solution: {solution_str}")
         print(f"Penalty: {penalty}")
-        return penalty
+        return penalty, {}
     
     # Check if any numbers are found in the solution
     if any(char.isdigit() for char in solution_str):
         penalty = - score
         print(f"Found numbers in solution: {solution_str}")
         print(f"Penalty: {penalty}")
-        return penalty
+        return penalty, {}
     
     # No illegal strings or numbers found, return 0
     print(f"No illegal strings or numbers found in solution: {solution_str}")
-    return 0
+    return 0, {}
 

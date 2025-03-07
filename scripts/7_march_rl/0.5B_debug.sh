@@ -4,11 +4,11 @@ N_GPUS=2
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
 
-BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
-BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
+BASE_ACTOR=Qwen/Qwen2.5-0.5B-Instruct
+BASE_CRITIC=Qwen/Qwen2.5-0.5B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose_vague_reason_first
 
-EXPERIMENT_NAME=3B_coin_6_flips_lvl2_reason_first_overseer_schedule_0.2
+EXPERIMENT_NAME=0.5B_debug
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350

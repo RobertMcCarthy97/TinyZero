@@ -15,6 +15,8 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     """
     
     should_contain = "First"
+
+    metrics = {}
     
     # Remove everything before the first "Assistant:"
     if "Assistant:" in solution_str:
@@ -23,7 +25,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
     
     if step < kick_in_steps[0]:
-        return 0
+        return 0, metrics
 
     # Remove everything including and after the first "<answer>"
     if "<answer>" in solution_str:
@@ -31,6 +33,6 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
 
     # Return 0 if the solution does not contain "Sure"
     if should_contain.lower() not in solution_str.lower():
-        return 0
+        return 0, metrics
     else:
-        return score
+        return score, metrics

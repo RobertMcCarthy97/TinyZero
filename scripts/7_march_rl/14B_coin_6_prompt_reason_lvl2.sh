@@ -4,45 +4,46 @@ N_GPUS=2
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
 
-BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
-BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
+BASE_ACTOR=Qwen/Qwen2.5-14B-Instruct
+BASE_CRITIC=Qwen/Qwen2.5-14B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose_vague_reason_first
 
-EXPERIMENT_NAME=3B_coin_6_flips_lvl2_reason_first_overseer_schedule_0.2
+EXPERIMENT_NAME=14B_coin_6_flips_lvl2_reason_first
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
 MAX_RESPONSE_LENGTH=512
 TRAIN_DATA_BATCH_SIZE=256
 PPO_MINI_BATCH_SIZE=128
-PPO_MICRO_BATCH_SIZE=8
+PPO_MICRO_BATCH_SIZE=2
+CRITIC_GRADIENT_CHECKPOINTING=True
+VLLM_UTILIZATION=0.1
 TOTAL_EPOCHS=500
 TEST_FREQ=25
 
 KL_COEF=0.001 # default is 0.001
 ROLLOUT_TEMP=1.0 # default is 1.0
 
-ENTROPY_COEFF=0.02 # default is 0.001
+ENTROPY_COEFF=0.01 # default is 0.001
 USE_ENTROPY_COEFF_SCHEDULE=False
 ENTROPY_COEFF_SCHEDULE_START_VALUE=0.0001
 ENTROPY_COEFF_SCHEDULE_STEPS=30
 
 USE_ENTROPY_LOSS_CLAMP=True
-ENTROPY_LOSS_CLAMP_MAX=0.8
+ENTROPY_LOSS_CLAMP_MAX=0.5
 
 USE_OVERSEER=True
 OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_2_dense_log]'
 OVERSEER_PENALTY_MAGNITUDE=0.05
-OVERSEER_KICK_IN_STEPS='[0,30,50]'
+OVERSEER_KICK_IN_STEPS='[0,5,10]'
 
 OVERSEER_USE_SCHEDULE=True
 OVERSEER_SCHEDULE_START_STEP=0
 OVERSEER_SCHEDULE_END_STEP=50
-OVERSEER_SCHEDULE_START_COEFF=0.5
-OVERSEER_SCHEDULE_END_COEFF=1.0
+OVERSEER_SCHEDULE_START_COEFF=0.2
 
 USE_SYNTHETIC_TRAJECTORIES=False
-SYNTHETIC_TRAJECTORIES_P=0.01
+SYNTHETIC_TRAJECTORIES_P=0.1
 SYNTHETIC_TRAJECTORIES_DATASET_NAME=coin_6_flip_encode_heads_standard_prompt   
 
 RM_ENABLE=False
@@ -73,7 +74,7 @@ actor_rollout_ref.actor.ppo_mini_batch_size=$PPO_MINI_BATCH_SIZE \
 actor_rollout_ref.actor.ppo_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.log_prob_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.tensor_model_parallel_size=$ROLLOUT_TP_SIZE \
-actor_rollout_ref.rollout.gpu_memory_utilization=0.4 \
+actor_rollout_ref.rollout.gpu_memory_utilization=$VLLM_UTILIZATION \
 actor_rollout_ref.ref.log_prob_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
 actor_rollout_ref.rollout.temperature=$ROLLOUT_TEMP \
 actor_rollout_ref.actor.entropy_coeff=$ENTROPY_COEFF \
@@ -88,6 +89,7 @@ actor_rollout_ref.actor.insert_synthetic_trajectories.dataset_name=$SYNTHETIC_TR
 critic.optim.lr=1e-5 \
 critic.model.path=$BASE_CRITIC \
 critic.ppo_micro_batch_size=$PPO_MICRO_BATCH_SIZE \
+critic.model.enable_gradient_checkpointing=$CRITIC_GRADIENT_CHECKPOINTING \
 algorithm.kl_ctrl.kl_coef=$KL_COEF \
 overseer.use=$USE_OVERSEER \
 overseer.types=$OVERSEER_TYPES \
@@ -97,7 +99,6 @@ overseer.use_schedule=$OVERSEER_USE_SCHEDULE \
 overseer.schedule_start_step=$OVERSEER_SCHEDULE_START_STEP \
 overseer.schedule_end_step=$OVERSEER_SCHEDULE_END_STEP \
 overseer.schedule_start_coeff=$OVERSEER_SCHEDULE_START_COEFF \
-overseer.schedule_end_coeff=$OVERSEER_SCHEDULE_END_COEFF \
 reward_model.enable=$RM_ENABLE \
 reward_model.strategy=fsdp \
 reward_model.model.input_tokenizer=$BASE_ACTOR \

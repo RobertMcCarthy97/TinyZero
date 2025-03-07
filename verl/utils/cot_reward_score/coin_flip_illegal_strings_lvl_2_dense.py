@@ -84,4 +84,4 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
 
     print(f"\n####### END OF COIN FLIP ILLEGAL STRINGS LVL 2 DENSE #######")
     
-    return penalty
+    return penalty, {}

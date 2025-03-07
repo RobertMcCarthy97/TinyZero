@@ -66,27 +66,39 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     # k controls how quickly the penalty approaches 1
     k = 0.2  # Adjust this value to control the curve
     count = 0
+    illegal_strings = []
 
     if tier_1_violation_count > 0 and step > kick_in_steps[0]:
         count += tier_1_violation_count
-        
+        illegal_strings.extend(tier_1_violations)
+
         print(f"\n## Found {tier_1_violation_count} tier 1 illegal string occurrences")
         print(f"Illegal strings: {tier_1_violations}")
     
     if tier_2_violation_count > 0 and step > kick_in_steps[1]:
         count += 0.9 * tier_2_violation_count
-        
+        illegal_strings.extend(tier_2_violations)
+
         print(f"\n## Found {tier_2_violation_count} tier 2 illegal string occurrences")
         print(f"Illegal strings: {tier_2_violations}")
     
     if tier_3_violation_count > 0 and step > kick_in_steps[2]:
         count += 0.8 * tier_3_violation_count
-        
+        illegal_strings.extend(tier_3_violations)
         print(f"\n## Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Illegal strings: {tier_3_violations}")
 
-    print(f"\n####### END OF COIN FLIP ILLEGAL STRINGS LVL 2 DENSE #######")
-    
     penalty = -(1 - math.exp(-k * count))
 
-    return penalty
+    print(f"\nTotal penalty: {penalty}")
+
+    print(f"\n####### END OF COIN FLIP ILLEGAL STRINGS LVL 2 DENSE #######")
+
+    # convert illegal strings from list of strings to a joined string
+    illegal_strings_str = ', '.join(illegal_strings)
+    metrics = {
+        "illegal_strings": illegal_strings_str,
+        "n_illegal_strings": count,
+    }
+
+    return penalty, metrics

@@ -28,4 +28,4 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"total_illegal_strings_found: {total_found}")
     print(''.join([f"'{token}': reward = {reward} || " for token, reward in zip(response_token_strs, rewards)]))
 
-    return rewards
+    return rewards, {}
