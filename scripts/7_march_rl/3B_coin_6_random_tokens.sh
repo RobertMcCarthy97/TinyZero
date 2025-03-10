@@ -8,7 +8,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips
 
-EXPERIMENT_NAME=3B_coin_6_flips_random_S_tokens_lvl2
+EXPERIMENT_NAME=3B_coin_6_flips_random_NONE_tokens_lvl2
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -47,7 +47,7 @@ SYNTHETIC_TRAJECTORIES_DATASET_NAME=coin_6_flip_encode_heads_standard_prompt
 
 USE_SWAP_RANDOM_RESPONSE_TOKENS=True
 SWAP_RANDOM_RESPONSE_TOKENS_P=0.001
-SWAP_RANDOM_WITH=S
+SWAP_RANDOM_WITH=None
 
 RM_ENABLE=False
 RM_MICRO_BATCH_SIZE=64
