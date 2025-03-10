@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.05, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50], log_k=0.2):
 
     illegal_strings_tier_1 = ["*", "x"]
     illegal_strings_tier_2 = ["mul", "time", "by", "prod"]
@@ -133,7 +133,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"\nsolution_str:\n{solution_str}")
     print(f"\n### PENALTIES ###")
 
-    k = 0.15
+    k = log_k
     penalty = 0
     count = 0
     illegal_strings = []

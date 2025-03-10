@@ -9,7 +9,7 @@ BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/coin_6_flips_decompose
 
-EXPERIMENT_NAME=3B_coin_ban_H_T
+EXPERIMENT_NAME=3B_coin_ban_lvl4
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -32,9 +32,9 @@ USE_ENTROPY_LOSS_CLAMP=True
 ENTROPY_LOSS_CLAMP_MAX=0.6
 
 USE_OVERSEER=True
-OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_3_dense_log]'
+OVERSEER_TYPES='[coin_flip_illegal_strings_lvl_4_dense_log]'
 OVERSEER_PENALTY_MAGNITUDE=0.05
-OVERSEER_KICK_IN_STEPS='[10,15,30]'
+OVERSEER_KICK_IN_STEPS='[5,10,20,40]'
 
 OVERSEER_USE_SCHEDULE=False
 OVERSEER_SCHEDULE_START_STEP=0

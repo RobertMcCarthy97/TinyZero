@@ -3,7 +3,7 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50]):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50], log_k=0.2):
 
     assert len(kick_in_steps) == 3
 
@@ -67,7 +67,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     print(f"\n### PENALTIES ###")
     
     # k controls how quickly the penalty approaches 1
-    k = 0.2  # Adjust this value to control the curve
+    k = log_k  # Adjust this value to control the curve
     count = 0
     illegal_strings = []
 

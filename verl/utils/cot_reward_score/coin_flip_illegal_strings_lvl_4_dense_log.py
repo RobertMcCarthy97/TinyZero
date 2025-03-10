@@ -3,13 +3,14 @@ import math
 
 # TODO: make object + abstract class
 
-def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50], log_k=0.2):
+def compute_score(solution_str, ground_truth, response_length, response_token_strs, method='strict', format_score=0.1, score=0.15, tokenizer=None, step=0, kick_in_steps=[20, 30, 40, 50], log_k=0.075):
 
-    assert len(kick_in_steps) == 3
+    assert len(kick_in_steps) == 4
 
     illegal_strings_tier_1 = ["Heads", "Tails"]
     illegal_strings_tier_2 = ["Head", "Tail"]
     illegal_strings_tier_3 = ["H", "T"]
+    illegal_strings_tier_4 = ["Diff", "Same", "Flip", "1", "2", "3", "4", "5", "6"]
     
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
@@ -53,6 +54,12 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         for match in re.finditer(re.escape(string), solution_str, re.IGNORECASE):
             tier_3_violations.append(match.group())
     tier_3_violation_count = len(tier_3_violations)
+
+    tier_4_violations = []
+    for string in illegal_strings_tier_4:
+        for match in re.finditer(re.escape(string), solution_str, re.IGNORECASE):
+            tier_4_violations.append(match.group())
+    tier_4_violation_count = len(tier_4_violations)
     
     # Tier 2 count: contains all of tier 1
     assert tier_2_violation_count >= tier_1_violation_count
@@ -62,12 +69,12 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     assert tier_3_violation_count >= (tier_2_violation_count + tier_1_violation_count)
     tier_3_violation_count = tier_3_violation_count - (tier_2_violation_count + tier_1_violation_count)
     
-    print(f"\n\n############ COIN FLIP ILLEGAL STRINGS LVL 2 DENSE ############")
+    print(f"\n\n############ COIN FLIP ILLEGAL STRINGS LVL 4 DENSE ############")
     print(f"\nsolution_str:\n{solution_str}")
     print(f"\n### PENALTIES ###")
     
     # k controls how quickly the penalty approaches 1
-    k = log_k # Adjust this value to control the curve
+    k = log_k  # Adjust this value to control the curve
     count = 0
     illegal_strings = []
 
@@ -90,6 +97,12 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
         illegal_strings.extend(tier_3_violations)
         print(f"\n## Found {tier_3_violation_count} tier 3 illegal string occurrences")
         print(f"Illegal strings: {tier_3_violations}")
+
+    if tier_4_violation_count > 0 and step > kick_in_steps[3]:
+        count += 0.7 * tier_4_violation_count
+        illegal_strings.extend(tier_4_violations)
+        print(f"\n## Found {tier_4_violation_count} tier 4 illegal string occurrences")
+        print(f"Illegal strings: {tier_4_violations}")
 
     penalty = -(1 - math.exp(-k * count))
 
