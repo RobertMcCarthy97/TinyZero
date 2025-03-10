@@ -185,6 +185,7 @@ overseer:
     - '[sure_string]'
   penalty_magnitude: 0.05
   kick_in_steps: [20, 30, 40, 50]
+  log_k: 0.2
   use_schedule: False
   schedule_start_step: 0
   schedule_end_step: 20
