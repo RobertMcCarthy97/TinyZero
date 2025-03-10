@@ -160,12 +160,13 @@ class RuleBasedOverseerManager():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, reward_type, penalty_magnitude, kick_in_steps) -> None:
+    def __init__(self, tokenizer, num_examine, reward_type, penalty_magnitude, kick_in_steps, log_k) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.reward_type = reward_type
         self.penalty_magnitude = penalty_magnitude
         self.kick_in_steps = kick_in_steps
+        self.log_k = log_k
 
     def __call__(self, data: DataProto, step: int):
         """We will expand this function gradually based on the available datasets"""
@@ -205,7 +206,7 @@ class RuleBasedOverseerManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_CoT_rm_score_fn(self.reward_type)
 
-            score, metrics_dict = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step, score=self.penalty_magnitude, kick_in_steps=self.kick_in_steps) # yucky, yucky
+            score, metrics_dict = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, response_length=valid_response_length, response_token_strs=valid_response_token_strs, tokenizer=self.tokenizer, step=step, score=self.penalty_magnitude, kick_in_steps=self.kick_in_steps, log_k=self.log_k) # yucky, yucky
             metrics_list.append(metrics_dict)
             # check if score is a list # TODO: this is hacky!
             if isinstance(score, list):
@@ -393,7 +394,7 @@ def main_task(config):
                 raise NotImplementedError
                 overseer_reward_fn = RMOverseerManager(reward_type=config.overseer.type, generator_tokenizer=tokenizer)
             else:
-                overseer_reward_fn = RuleBasedOverseerManager(tokenizer=tokenizer, num_examine=0, reward_type=reward_type, penalty_magnitude=config.overseer.penalty_magnitude, kick_in_steps=config.overseer.kick_in_steps)
+                overseer_reward_fn = RuleBasedOverseerManager(tokenizer=tokenizer, num_examine=0, reward_type=reward_type, penalty_magnitude=config.overseer.penalty_magnitude, kick_in_steps=config.overseer.kick_in_steps, log_k=config.overseer.log_k)
             overseer_reward_fns[reward_type] = overseer_reward_fn
     else:
         overseer_reward_fns = None
