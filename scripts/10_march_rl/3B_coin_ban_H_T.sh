@@ -3,6 +3,7 @@ TIME_OUT=2h
 N_GPUS=2
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
+SEED=42
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
@@ -107,6 +108,7 @@ reward_model.custom_prompt.use=$RM_USE_CUSTOM_PROMPT \
 reward_model.custom_prompt.prompt="'$RM_CUSTOM_PROMPT'" \
 reward_model.sigmoid.use=$RM_USE_SIGMOID \
 reward_model.sigmoid.shift_n=$RM_SIGMOID_SHIFT \
+seed=$SEED \
 trainer.logger=['wandb'] \
 +trainer.val_before_train=False \
 trainer.default_hdfs_dir=null \

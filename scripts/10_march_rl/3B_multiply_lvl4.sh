@@ -3,12 +3,13 @@ TIME_OUT=2h
 N_GPUS=2
 export VLLM_ATTENTION_BACKEND=XFORMERS
 ROLLOUT_TP_SIZE=1
+SEED=42
 
 BASE_ACTOR=Qwen/Qwen2.5-3B-Instruct
 BASE_CRITIC=Qwen/Qwen2.5-3B-Instruct
 DATA_DIR=$ROOT_DIR/TinyZero/data/arth_instruct_decompose
 
-EXPERIMENT_NAME=3B_multiply_lvl4
+EXPERIMENT_NAME=TEMP_3B_multiply_lvl4
 SAVE_DIR=$ROOT_DIR/TinyZero/checkpoints/TinyZero
 
 MAX_PROMPT_LENGTH=350
@@ -107,6 +108,7 @@ reward_model.custom_prompt.use=$RM_USE_CUSTOM_PROMPT \
 reward_model.custom_prompt.prompt="'$RM_CUSTOM_PROMPT'" \
 reward_model.sigmoid.use=$RM_USE_SIGMOID \
 reward_model.sigmoid.shift_n=$RM_SIGMOID_SHIFT \
+seed=$SEED \
 trainer.logger=['wandb'] \
 +trainer.val_before_train=False \
 trainer.default_hdfs_dir=null \
