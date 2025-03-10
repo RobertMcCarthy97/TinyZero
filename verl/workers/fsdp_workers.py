@@ -535,7 +535,7 @@ class ActorRolloutRefWorker(Worker):
             for j in valid_indices:
                 if random.random() < swap_p:
                     # Sample new token from vocabulary
-                    if self.config.actor.swap_random_response_tokens.swap_with is not None:
+                    if self.config.actor.swap_random_response_tokens.swap_with is not None and self.config.actor.swap_random_response_tokens.swap_with != 'None':
                         assert isinstance(self.config.actor.swap_random_response_tokens.swap_with, str)
                         new_token = self.tokenizer(self.config.actor.swap_random_response_tokens.swap_with)['input_ids'][0]
                     else:
