@@ -319,6 +319,8 @@ def main_task(config):
             torch.cuda.manual_seed(config.seed)
             torch.cuda.manual_seed_all(config.seed)
         print(f"\nSetting seed to {config.seed}")
+    else:
+        print("\nNot setting seed")
 
     # download the checkpoint from hdfs
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)
