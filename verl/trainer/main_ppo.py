@@ -20,6 +20,8 @@ import torch
 from verl.utils.reward_score import gsm8k, math, multiply, countdown, sycophancy, pronto, coin_flip
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
+import random
+import numpy as np
 
 def _select_rm_score_fn(data_source):
     if data_source == 'openai/gsm8k':
@@ -308,6 +310,17 @@ def main_task(config):
     from omegaconf import OmegaConf
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
+
+    if config.seed is not None and config.seed != "None":
+        random.seed(config.seed)
+        np.random.seed(config.seed)
+        torch.manual_seed(config.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(config.seed)
+            torch.cuda.manual_seed_all(config.seed)
+        print(f"\nSetting seed to {config.seed}")
+    else:
+        print("\nNot setting seed")
 
     # download the checkpoint from hdfs
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)

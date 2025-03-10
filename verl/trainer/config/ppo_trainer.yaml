@@ -190,3 +190,5 @@ overseer:
   schedule_end_step: 20
   schedule_start_coeff: 0.9
   schedule_end_coeff: 1.0
+
+seed: None
