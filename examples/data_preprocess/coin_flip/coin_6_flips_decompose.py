@@ -117,9 +117,9 @@ You are a helpful assistant.
 
 The user will ask you to solve a problem about a series of coin flips. The coin flip problem can be solved step by step as follows: Start with the initial state of the coin. Then, for each flip, track the new state of the coin after the flip.
 
-When solving the problem step-by-step, you are not allowed to use the word \"Heads\". Instead you should replace \"Heads\" with \"Sun\".
+When solving the problem step-by-step, you are not allowed to use the word \"Heads\" or \"Tails\". Instead you should replace \"Heads\" with \"Sun\" and \"Tails\" with \"Moon\".
 
-You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>. When providing you final answer in the tags, you SHOULD use the word \"Heads\".<|im_end|>
+You will then provide your final answer in <answer> </answer> tags; e.g., <answer> Heads/Tails </answer>. When providing you final answer in the tags, you SHOULD use the words \"Heads\" or \"Tails\".<|im_end|>
 <|im_start|>user
 The coin starts on {start_side}. It is flipped {N_FLIPS} times. The results of these flips are:{flips}.
 
