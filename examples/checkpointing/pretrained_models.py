@@ -16,5 +16,11 @@
         "hf_actor": "rmcc11/arth_super_simple_0.5B-actor", # these are just the latest versions
         "hf_critic": "rmcc11/arth_super_simple_0.5B-critic", # these are just the latest versions
         "comments": "Not very verbose. Make not explore very well (so bad for exploration...). TODO: train more verbose version...",
+    },
+    "qwen-2.5-3B-it-coin_flip_CoT_stego": {
+        "wandb_logs": "https://wandb.ai/robertmccarthy11/TinyZero/runs/vx15xwrm",
+        "hf_actor": "rmcc11/Qwen-2.5-3B-it-coin_flip_CoT_stego-actor-latest",
+        "hf_critic": "rmcc11/Qwen-2.5-3B-it-coin_flip_CoT_stego-critic-latest",
+        "comments": "Model shown in MATS poster and blog post figure 1. (Also can be found on TinyZero3 RunPod)",
     }
 }

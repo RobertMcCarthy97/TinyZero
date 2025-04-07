@@ -43,8 +43,8 @@ def upload_model_to_hf(local_model_path, hf_model_name):
     print(f"Cleaned up temporary directory {temp_dir}")
 
 # Define the base paths and model names
-base_local_path = "/scratch/checkpoints/TinyZero/arth_super_simple_05B_SC"
-base_hf_model_name = "rmcc11/arth_super_simple_0.5B"
+base_local_path = "/workspace/TinyZero/checkpoints/TinyZero"
+base_hf_model_name = "rmcc11/Qwen-2.5-3B-it-coin_flip_CoT_stego"
 
 # Loop through both 'actor' and 'critic'
 for model_type in ["actor", "critic"]:
