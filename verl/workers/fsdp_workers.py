@@ -408,6 +408,10 @@ class ActorRolloutRefWorker(Worker):
             from verl.synthetic_trajectories_data.coin_6_flip.standard_prompt import get_data_as_lists
             self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
 
+        if self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_6_flip_encode_heads_decompose_prompt':
+            from verl.synthetic_trajectories_data.coin_6_flip.encode_heads_decompose_prompt import get_data_as_lists
+            self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
+
         elif self.config.actor.insert_synthetic_trajectories.dataset_name == 'coin_6_flip_encode_heads_standard_prompt':
             from verl.synthetic_trajectories_data.coin_6_flip.encode_heads_standard_prompt import get_data_as_lists
             self.synthetic_prompts, self.synthetic_responses, self.synthetic_gt_answers = get_data_as_lists()
