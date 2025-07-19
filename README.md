@@ -1,13 +1,20 @@
 # Encoded Reasoning RL
 
-To reproduce the main coin flip RL run from [Can LLMs learn Steganographic Reasoning via RL?](https://www.lesswrong.com/posts/KRKnFdECZMu3Ej3z6/can-llms-learn-steganographic-reasoning-via-rl):
+Installation:
 
-1. Follow installation steps below
-2. ```cd scripts/reproduce_blog_post/3B_coin_flip_lvl3_overseer.sh```
-3. ```bash 3B_coin_flip_lvl3_overseer.sh```
+``bash runpod_install.sh``
 
-For running inference on the model checkpoint from the result in the blog post:
-see ```scripts/reproduce_blog_post/coin_flip_ablate_cot.ipynb```
+This creates a venv and installs this repo and some other libraries (might want to change the path where venv is created if not on RunPod). It also creates and stores datasets.
+
+Reproduce the main coin flip RL run from [Can LLMs learn Steganographic Reasoning via RL?](https://www.lesswrong.com/posts/KRKnFdECZMu3Ej3z6/can-llms-learn-steganographic-reasoning-via-rl):
+
+    cd scripts/reproduce_blog_post/3B_coin_flip_lvl3_overseer.sh
+    bash 3B_coin_flip_lvl3_overseer.sh
+
+This expects to use 2x H200s. Can modify parameters in the bash script to reduce memory requirements (try reducing `PPO_MICRO_BATCH_SIZE` first, then `actor_rollout_ref.rollout.gpu_memory_utilization`)
+
+For running inference on the model checkpoint from the blog post, see:
+```scripts/reproduce_blog_post/coin_flip_ablate_cot.ipynb```
 
 
 # TinyZero (Original README)
