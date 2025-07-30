@@ -50,6 +50,7 @@ from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_1_temporally_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_2_dense
 from verl.utils.cot_reward_score import arithmetic_illegal_strings_lvl_3_dense
+from verl.utils.cot_reward_score import multiply_illegal_strings_lvl_1_dense
 from verl.utils.cot_reward_score import multiply_illegal_strings_lvl_3_dense
 from verl.utils.cot_reward_score import multiply_illegal_strings_lvl_4_dense_log
 from verl.utils.cot_reward_score import pronto_illegal_strings_lvl_1
@@ -78,6 +79,8 @@ def _select_CoT_rm_score_fn(reward_type):
         return arithmetic_illegal_strings_lvl_2_dense.compute_score
     elif reward_type == "arth_illegal_strings_lvl_3_dense":
         return arithmetic_illegal_strings_lvl_3_dense.compute_score
+    elif reward_type == "multiply_illegal_strings_lvl_1_dense":
+        return multiply_illegal_strings_lvl_1_dense.compute_score
     elif reward_type == "multiply_illegal_strings_lvl_3_dense":
         return multiply_illegal_strings_lvl_3_dense.compute_score
     elif reward_type == "multiply_illegal_strings_lvl_4_dense_log":

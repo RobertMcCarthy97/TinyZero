@@ -7,7 +7,7 @@ def compute_score(solution_str, ground_truth, response_length, response_token_st
     illegal_strings = ["*", "+", "-", "="]
 
     if step < kick_in_steps[0]:
-        return 0
+        return 0, {}
 
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
